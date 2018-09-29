@@ -54,7 +54,7 @@ export default function(option){
             }
     }
     if (!option.headers || !option.headers.contentType) {
-            option.contentType = "application/json;charset=utf-8";
+            option.headers = {'Content-Type' : "application/json;charset=utf-8"}
     }
     return axios(option);
 }

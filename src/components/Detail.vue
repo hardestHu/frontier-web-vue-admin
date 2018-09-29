@@ -9,7 +9,7 @@
 					<sider-bar></sider-bar>
 				</el-aside>
 				<el-container>
-					<el-main>
+					<el-main style="padding:10px 5px">
 						<router-view></router-view>	
 					</el-main>
 					

@@ -56,7 +56,7 @@ export function getUser(success){
 export function logout(success){
 		$ajax({
 			method:"get",
-			url:"/user/logout",
+			url:"/logout",
 		}).then(success);
 }
 
@@ -84,7 +84,6 @@ export function getCompanys(success){
  		method:"post",
  		url:'/port/getPorts',
  		data:{},
- 		dataType: "json",
  	}).then(success)
  }
 
@@ -93,6 +92,5 @@ export function getCompanys(success){
  		method:"post",
  		url:'/user/getUsersForPage?'+qs.stringify(pageObj),
  		data:data,
- 		dataType: "json",
  	}).then(success)
  }

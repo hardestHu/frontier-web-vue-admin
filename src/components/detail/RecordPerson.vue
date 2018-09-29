@@ -1,10 +1,10 @@
 <template>
 	<div>
-		<el-row>
+		<el-row style="padding-bottom: 10px;">
 			<el-col :span="4">
 				<span style="font-family: 'Source Sans Pro', sans-serif;font-size:24px;color:black">备案注册申请</span>
 			</el-col>
-			<el-col :span="4" :offset="16">
+			<el-col :span="4" :offset="16" style="padding-top: 16px">
 				<el-breadcrumb separator-class="el-icon-arrow-right">
 				  	<el-breadcrumb-item :to="{ path: 'home' }">首页</el-breadcrumb-item>
 				    <el-breadcrumb-item>备案注册申请</el-breadcrumb-item>
@@ -15,7 +15,7 @@
 
 		<el-row>
 			<el-form :inline="true" label-position="right" label-width="70px"  size="mini" :model="queryFormInfo">
-				<el-col :xs="24" :sm="12" :md="8" :lg="8" :xl="8">
+				<el-col :xs="24" :sm="12" :md="7" :lg="7" :xl="7" :offset="1">
 					<el-form-item label="处理状态">
 					    <el-select v-model="queryFormInfo.status">
 					    	<el-option label="待执勤人员审核" value="0"></el-option>
@@ -28,9 +28,9 @@
 					</el-form-item>
 				</el-col>
 				
-				<el-col :xs="24" :sm="12" :md="8" :lg="8" :xl="8">
+				<el-col :xs="24" :sm="12" :md="7" :lg="7" :xl="7" :offset="1">
 					<el-form-item label="所属公司">
-					    <el-select v-model="queryFormInfo.company">
+					    <el-select v-model="queryFormInfo.companyName">
 					    	<el-option label="查询全部" value=""></el-option>
 					        <el-option v-for="company in companyList" :label="company.companyName" :value="company.companyName" ></el-option>
 					       
@@ -38,7 +38,7 @@
 					</el-form-item>
 				</el-col>
 				
-				<el-col :xs="24" :sm="12" :md="8" :lg="8" :xl="8">
+				<el-col :xs="24" :sm="12" :md="7" :lg="7" :xl="7" :offset="1">
 					<el-form-item label="所属港口">
 					    <el-select v-model="queryFormInfo.portId">
 					        <el-option label="查询全部" value=""></el-option>
@@ -47,13 +47,13 @@
 					</el-form-item>
 				</el-col>
 				
-				<el-col :xs="24" :sm="12" :md="8" :lg="8" :xl="8">
+				<el-col :xs="24" :sm="12" :md="7" :lg="7" :xl="7" :offset="1">
 					<el-form-item label="身份证号">
 					    <el-input v-model="queryFormInfo.identityCard"></el-input>
 					</el-form-item>
 				</el-col>
 
-				<el-col :xs="8" :sm="8" :md="8" :lg="8" :xl="8">
+				<el-col :xs="7" :sm="7" :md="7" :lg="7" :xl="7" :offset="1">
 					<el-form-item>
 					    <el-button type="primary" @click="onSubmit">查询</el-button>
 					</el-form-item>	
@@ -74,7 +74,6 @@
 			     <el-table-column prop="duty" label="职位">
 			    </el-table-column>
 			     <el-table-column prop="status" label="状态">
-
 			     	<template slot-scope="scope">
 			     			<span>{{scope.row.status == '0'?'待执勤人员审核':(
 			     				scope.row.status == '1'?'通过':(
@@ -88,30 +87,102 @@
 			    </el-table-column>
 			</el-table>
 		</el-row>
-		<el-row>
-			<el-pagination background layout="prev, pager, next" :page-size="6"  :total="allPageData.total" @current-change="selectCurrentPage($event)"></el-pagination>
+		<!-- 分页 -->
+		<el-row class="pageComponent">
+			<el-pagination background layout="prev, pager, next" :page-size="pageData.pageSize"  :total="pageData.total" @current-change="selectCurrentPage($event)"></el-pagination>
 		</el-row>
 
-		<!-- Form   表单弹框-->
-		<!-- 	<el-button type="text" @click="dialogFormVisible = true">打开嵌套表单的 Dialog</el-button>
+		<!-- Form   弹框编辑-->
 		
-		<el-dialog title="收货地址" :visible.sync="dialogFormVisible">
-		  <el-form :model="form">
-		    <el-form-item label="活动名称" :label-width="formLabelWidth">
-		      <el-input v-model="form.name" autocomplete="off"></el-input>
-		    </el-form-item>
-		    <el-form-item label="活动区域" :label-width="formLabelWidth">
-		      <el-select v-model="form.region" placeholder="请选择活动区域">
-		        <el-option label="区域一" value="shanghai"></el-option>
-		        <el-option label="区域二" value="beijing"></el-option>
-		      </el-select>
-		    </el-form-item>
-		  </el-form>
-		  <div slot="footer" class="dialog-footer">
-		    <el-button @click="dialogFormVisible = false">取 消</el-button>
-		    <el-button type="primary" @click="dialogFormVisible = false">确 定</el-button>
-		  </div>
-		</el-dialog> -->
+		<el-dialog title="个人详细信息" :visible.sync="dialogFormVisible" width="60%" >
+			  <el-form :model="dialogForm"  inline="true" size="mini" label-position="right" label-suffix=" :">
+			  	<el-row>
+			  		<el-col :span="10" :offset='1'>
+			  			<el-form-item label="姓名">
+				        	<el-input v-model="dialogForm.name"  readonly="true"></el-input>
+					    </el-form-item>
+			  		</el-col>
+					<el-col :span="10" :offset="2">
+						<el-form-item label="身份证号">
+					        <el-input v-model="dialogForm.identityCard" readonly="true"></el-input>
+					    </el-form-item>	
+					</el-col>
+			  		<el-col :span="10" :offset='1'>
+			  			<el-form-item label="性别">
+						    <el-select v-model="dialogForm.sex">
+						        <el-option label="男" value="男"></el-option>
+						        <el-option label="女" value="女"></el-option>
+						    </el-select>
+
+					    </el-form-item>
+			  		</el-col>
+			  		<el-col :span="10" :offset="2">
+					    <el-form-item label="联系电话">
+				        	<el-input v-model="dialogForm.phone" ></el-input>
+				    	</el-form-item>
+					</el-col>  	
+			  	</el-row>
+
+			  	<el-row>
+			  		<el-col :span="22" :offset="1">
+			  			<el-form-item label="业务权限">
+			  			 	<el-checkbox-group v-model="dialogForm.businessList">
+							    <el-checkbox label="临时搭靠外轮许可证办理"></el-checkbox>
+							    <el-checkbox label="随船工作证申请"></el-checkbox>
+							    <el-checkbox label="在港船舶移泊申请"></el-checkbox>
+							    <el-checkbox label="实际抵离港时间确保"></el-checkbox>
+							    <el-checkbox label="团队旅客出境申报"></el-checkbox>
+							    <el-checkbox label="取消靠泊计划"></el-checkbox>
+							</el-checkbox-group>
+			  			</el-form-item>
+			  		</el-col>
+			  		<el-col :span="22" :offset="1">
+			  			<el-form-item label="登轮证权限">
+			  			 	<el-checkbox-group v-model="dialogForm.boardingList">
+							    <el-checkbox label="业务"></el-checkbox>
+							    <el-checkbox label="供应"></el-checkbox>
+							    <el-checkbox label="加油"></el-checkbox>
+							    <el-checkbox label="加水"></el-checkbox>
+							    <el-checkbox label="废旧回收"></el-checkbox>
+							    <el-checkbox label="维修"></el-checkbox>
+							    <el-checkbox label="劳务"></el-checkbox>
+							    <el-checkbox label="绑扎"></el-checkbox>
+							    <el-checkbox label="装卸"></el-checkbox>
+							    <el-checkbox label="商品检验"></el-checkbox>
+							    <el-checkbox label="船东"></el-checkbox>
+							    <el-checkbox label="船员家属"></el-checkbox>
+							</el-checkbox-group>
+			  			</el-form-item>
+			  		</el-col>
+			  	</el-row>	
+
+			  	<el-row>
+			  		<el-col :span="10" :offset="1" >
+			  			<el-form-item label="常用回复">
+			  				<el-select v-model="dialogForm.reply"></el-select>
+			  			</el-form-item>
+			  		</el-col>
+			  		<el-col :span="10" :offset="2" >
+			  			<el-form-item label="申请回复">
+			  				 <el-input type="textarea" v-model="dialogForm.replyContent"></el-input>
+			  			</el-form-item>
+			  		</el-col>
+			  		<el-col :span="10" :offset="1" >
+			  			<el-form-item label="处理状态">
+			  				<el-select>
+			  					<el-option label="通过" value="1"></el-option>
+						        <el-option label="不通过" value="2"></el-option>
+			  				</el-select>
+			  			</el-form-item>
+			  		</el-col>
+			  	</el-row>
+	
+			  </el-form>
+			  <div slot="footer">
+			    <el-button @click="dialogFormVisible = false">取 消</el-button>
+			    <el-button type="primary" @click="confirmDialog">确 定</el-button>
+			  </div>
+		</el-dialog>
 	</div>
 </template>
 
@@ -120,241 +191,45 @@
 	export default{
 		data:function(){
 			return {
-				tableData:[
-				{
-			"id": "2292289710277632",
-			"partyId": "22910420401858581747",
-			"name": "马蒙怀",
-			"identityCard": "320107198705150318",
-			"phone": "17712418705",
-			"city": null,
-			"cityType": null,
-			"remarkMatter": "船舶服务",
-			"frontCard": "/upload/20170802/2292289127351296.jpg",
-			"behindCard": "/upload/20170802/2292289225032704.jpg",
-			"handCard": "/upload/20170802/2292289368802304.jpg",
-			"relationshipProve": "/upload/20170802/2292289513391104.jpg",
-			"companyId": null,
-			"companyName": "南京纪发船舶清仓残油回收站",
-			"authority": "1,b0,b1,b4,",
-			"duty": "业务员",
-			"sex": "男",
-			"openid": "oxwWywVzmNgg7uE1LaALrv2m12a4",
-			"nationality": null,
-			"serviceCode": "武彬彬",
-			"status": 1,
-			"reply": "通过",
-			"portId": "1835151452341248",
-			"applyTime": "2017-08-02 16:53:22",
-			"birthday": "1987-05-15",
-			"startTime": "2017-08-02 16:52:28",
-			"endTime": "2017-12-31 23:59:59",
-			
-			"portAuth": null,
-			"remindTag": false
-			},
-				{
-			"id": "2292488092075008",
-			"partyId": "22919424557066334802",
-			"name": "葛峰",
-			"identityCard": "320623198411071670",
-			"phone": "18052041348",
-			"city": null,
-			"cityType": null,
-			"remarkMatter": "业务需要",
-			"frontCard": "/upload/20170803/2293693720921088.jpg",
-			"behindCard": "/upload/20170803/2293693912794112.jpg",
-			"handCard": "/upload/20170803/2293694028481536.jpg",
-			"relationshipProve": "/upload/20170803/2293694164452352.jpg",
-			"companyId": "2292494350468096",
-			"companyName": "江苏沃鑫船务有限公司",
-			"authority": "b0,b10,b11,3,4,9,",
-			"duty": "船务部",
-			"sex": "男",
-			"openid": "oxwWywUGueWYfoshjesJUh3dhDDA",
-			"nationality": null,
-			"serviceCode": null,
-			"status": 0,
-			"reply": null,
-			"portId": "1835151452341248",
-			"applyTime": "2017-08-02 20:15:10",
-			"birthday": "1984-11-07",
-			"startTime": null,
-			"endTime": null,
-			"auditPhotos": null,
-			"portAuth": null,
-			"remindTag": false
-		},
-		{
-			"id": "2293199420605440",
-			"partyId": "22793850154854499736",
-			"name": "邹付国",
-			"identityCard": "321281198707084377",
-			"phone": "13851658160",
-			"city": null,
-			"cityType": null,
-			"remarkMatter": "外轮代理",
-			"frontCard": "/upload/20170821/2318941073736704.jpg",
-			"behindCard": "/upload/20170821/2318941221946368.jpg",
-			"handCard": "/upload/20170821/2318941378855936.jpg",
-			"relationshipProve": "/upload/20170821/2318941579445248.jpg,/upload/20170821/2318941587293184.jpg,/upload/20170821/2318941595239424.jpg,/upload/20170821/2318941601350656.jpg",
-			"companyId": "_NULL",
-			"companyName": "南京航姆船舶代理有限公司",
-			"authority": "b0,b8,1,2,3,4,9,",
-			"duty": "外勤",
-			"sex": "男",
-			"openid": "oxwWywaV8FTpYiC28UCIXexpGQ8k",
-			"nationality": null,
-			"serviceCode": null,
-			"status": '',
-			"reply": null,
-			"portId": "1835151452341248",
-			"applyTime": "2017-08-03 08:18:46",
-			"birthday": "1987-07-08",
-			"startTime": null,
-			"endTime": null,
-			"auditPhotos": null,
-			"portAuth": null,
-			"remindTag": false
-		}],
-        dialogFormVisible: false,
-		form: {
-		          name: '',
-		          region: '',
-		          date1: '',
-		          date2: '',
-		          delivery: false,
-		          type: [],
-		          resource: '',
-		          desc: ''
-		        },
-		formLabelWidth: '120px',
-		queryFormInfo:{
-			status:"",
-			company:"",
-			portId:"",
-		},
-		allPageData:{
-			total:'20'
-		},
-		companyList:[{
-		"id": "2095489893303296",
-		"companyName": "张家港保税区瑞创国际物流有限公司",
-		"businessNo": "91320592MA1ND4B017",
-		"taxNo": "91320592MA1ND4B017",
-		"legalPerson": "张洁",
-		"categoryName": "外轮代理公司",
-		"threeCertificate": "/upload/20170316/2095482756137984.jpg",
-		"businessLicense": null,
-		"hygieneCertificate": null,
-		"personnelList": "/upload/20170316/2095488685261824.jpg",
-		"remark": null,
-		"status": 1,
-		"serviceCode": "徐振扬",
-		"relationshipCertificate": "/upload/20170316/2095488422609920.jpg",
-		"dockCertificate": null,
-		"maritimeCertificate": null,
-		"commodityCertificate": null,
-		"shipCertificate": "/upload/20170316/2095483563295744.jpg",
-		"openid": "oxwWywecIOezaD3i4fTi0i-yUAlU",
-		"reply": "通过",
-		"portId": "1835153608475648",
-		"applyTime": "2017-03-16 16:18:14"
-	},
-	{
-		"id": "2163441998676992",
-		"companyName": "南通明洋船务代理有限公司",
-		"businessNo": "91320602755877935P",
-		"taxNo": "91320602755877935P",
-		"legalPerson": "王湧泉",
-		"categoryName": "外轮代理公司",
-		"threeCertificate": "/upload/20170503/2163438773371904.jpg",
-		"businessLicense": null,
-		"hygieneCertificate": null,
-		"personnelList": "/upload/20170503/2163439510651904.jpg",
-		"remark": null,
-		"status": 1,
-		"serviceCode": "庞嘉华",
-		"relationshipCertificate": "/upload/20170503/2163439685239808.jpg,/upload/20170503/2163439687287808.jpg",
-		"dockCertificate": null,
-		"maritimeCertificate": null,
-		"commodityCertificate": null,
-		"shipCertificate": "/upload/20170503/2163438926971904.jpg",
-		"openid": "oxwWywQXzFeLGapRULjEirCelg-Q",
-		"reply": "通过",
-		"portId": "1835152074638336",
-		"applyTime": "2017-05-03 16:22:42"
-	},
-	{
-		"id": "2163454741185536",
-		"companyName": "常熟外轮代理有限公司",
-		"businessNo": "91320581251451404N",
-		"taxNo": "91320581251451404N",
-		"legalPerson": "邹土兴",
-		"categoryName": "外轮代理公司",
-		"threeCertificate": "/upload/20170503/2163439562097664.jpg",
-		"businessLicense": null,
-		"hygieneCertificate": null,
-		"personnelList": "/upload/20170503/2163446551331840.jpg",
-		"remark": null,
-		"status": 1,
-		"serviceCode": "张文祥",
-		"relationshipCertificate": "/upload/20170503/2163454696375296.jpg",
-		"dockCertificate": null,
-		"maritimeCertificate": null,
-		"commodityCertificate": null,
-		"shipCertificate": "/upload/20170503/2163440694117376.jpg",
-		"openid": "oxwWywbxfWp44cKtvTyNcdFtPIxU",
-		"reply": "通过",
-		"portId": "1835153734452224",
-		"applyTime": "2017-05-03 16:35:40"
-	}],
-		portList:[{
-		"id": "1835150862795776",
-		"portCode": "P0008",
-		"portName": "连云港出入境边防检查站",
-		"portType": null,
-		"status": 0,
-		"remark": "连云港边检站",
-		"phone": "0518-82310663",
-		"lon": "119.354985",
-		"lat": "34.724527"
-	},
-	{
-		"id": "1835151111291904",
-		"portCode": "P0014",
-		"portName": "盐城出入境边防检查站",
-		"portType": null,
-		"status": 0,
-		"remark": "盐城边检站",
-		"phone": "0515-83287110",
-		"lon": "119.071264",
-		"lat": "32.198525"
-	},
-	{
-		"id": "1835151452341248",
-		"portCode": "P0001",
-		"portName": "南京港出入境边防检查站",
-		"portType": null,
-		"status": 0,
-		"remark": "南京港边检站",
-		"phone": "暂无",
-		"lon": "118.736115",
-		"lat": "32.094828"
-	}],
 
-		    }
-			
+				tableData:[],
+		        dialogFormVisible: false,
+				formLabelWidth: '120px',
+				// 查询变量-变量值
+				queryFormInfo:{
+					status:"0",
+					companyName:"",
+					portId:"",
+					identityCard:""
+				},
+				//查询变量-数量信息
+				pageObj:{
+					page: 1, //当前页
+					rows: 10, //每页条数
+					sort: "", //排序字段
+					order: "" //排序顺序
+				},
+				//分页组件变量
+				pageData:{
+					total:1,
+					pageSize:10
+				},
+				companyList:[],
+				portList:[],
+				dialogForm:{
+					name:'',
+					identityCard:'',
+					sex:'',
+					phone:'',
+					businessList:[],
+					boardingList:[]
+				}
+		    
+			}	
 		},
 		mounted:function(){
 			let $this = this;
-			let pageObj = {
-				page: 1, //当前页
-				rows: 10, //每页条数
-				sort: "", //排序字段
-				order: "" //排序顺序
-			};
-			/*getCompanys(function(resp){
+			getCompanys(function(resp){
 				debugger;
 				$this.companyList = resp.returnValue;
 			})
@@ -362,30 +237,71 @@
 				debugger;
 				$this.portList = resp.returnValue;
 			})
-			*/
-			/*getUsersForPage(pageObj,{status: 0, portId: ""},function(resp){
+			
+			getUsersForPage(this.pageObj,this.queryFormInfo,function(resp){
 				debugger;
 				if(resp.returnValue && resp.returnValue.total > 0){
 					$this.tableData = resp.returnValue.rows;
-
+					$this.pageData.total = resp.returnValue.total;
 				}
-
-			})*/
+			})
 		},
 		methods:{
+			/**
+			 * [onSubmit 查询数据]
+			 * @return {[type]} [description]
+			 */
+			onSubmit:function(){
+				debugger;
+				let $this = this;
+				getUsersForPage(this.pageObj,this.queryFormInfo,function(resp){
+					debugger;
+					if(resp.returnValue && resp.returnValue.total > 0){
+						$this.tableData = resp.returnValue.rows;
+						$this.pageData.total = resp.returnValue.total;
+
+					}
+
+				})
+
+				
+			},
+			
+			selectCurrentPage:function(currentPageNum){
+				debugger;
+				console.log(currentPageNum);
+				this.pageObj.page = currentPageNum;
+				let $this = this;
+				getUsersForPage(this.pageObj,this.queryFormInfo,function(resp){
+					debugger;
+					$this.tableData = resp.returnValue.rows;
+				})
+
+			},
 			dblClick:function(currentData){
 				debugger;
 				console.log(currentData);
+				this.dialogFormVisible = true;
 			},
-			onSubmit:function(){
-
-			},
-			selectCurrentPage:function(currentPageNum){
+			confirmDialog:function(){
 				debugger;
-				console.log(pageInfo);
+				console.log('aa');
 			}
+
 		}
 	}
 </script>
 <style>
+	.pageComponent{
+		float: right;
+    	padding-top: 10px;
+	}
+	.el-table--small td, .el-table--small th {
+    	padding: 5px 0;
+	}
+	.el-checkbox-group .el-checkbox{
+		margin-left:0;
+		margin-right:15px;
+	}
+
 </style>
