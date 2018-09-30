@@ -94,3 +94,33 @@ export function getCompanys(success){
  		data:data,
  	}).then(success)
  }
+
+export function getDictionarys(data,success){
+	$ajax({
+		method:'post',
+		url:'/dictionary/getDictionarys',
+		data:data,
+	}).then(success)
+}
+
+export function getQuickReplay(data,success){
+			$ajax({
+				method: "post",
+				url:"/quickReply/getQuickReplys",
+				data:data
+			}).then(success)
+}
+/*record_person 相关*/
+/**
+ * [updateUserById 审批注册申请接口]
+ * @param  {[object]} data    []
+ * @param  {[function]} success [接口成功调用后的处理函数]
+ * @return {[object]}         [返回处理结果]
+ */
+export function updateUserById(data,success){
+		$ajax({
+			method:"post",
+			url:"/user/updateUserById",
+			data:data
+		}).then(success)
+}

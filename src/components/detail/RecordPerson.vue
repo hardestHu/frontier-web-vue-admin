@@ -95,16 +95,17 @@
 		<!-- Form   弹框编辑-->
 		
 		<el-dialog title="个人详细信息" :visible.sync="dialogFormVisible" width="60%" >
-			  <el-form :model="dialogForm"  inline="true" size="mini" label-position="right" label-suffix=" :">
+			  <el-form :model="dialogForm"  :inline="true" size="mini" label-position="right" label-suffix=" :">
 			  	<el-row>
 			  		<el-col :span="10" :offset='1'>
 			  			<el-form-item label="姓名">
-				        	<el-input v-model="dialogForm.name"  readonly="true"></el-input>
+				        	<span>{{dialogForm.name}}</span>
 					    </el-form-item>
 			  		</el-col>
 					<el-col :span="10" :offset="2">
 						<el-form-item label="身份证号">
-					        <el-input v-model="dialogForm.identityCard" readonly="true"></el-input>
+					        <!-- <el-input v-model="dialogForm.identityCard" readonly="true"></el-input> -->
+					        <span>{{dialogForm.identityCard}}</span>
 					    </el-form-item>	
 					</el-col>
 			  		<el-col :span="10" :offset='1'>
@@ -159,18 +160,20 @@
 			  	<el-row>
 			  		<el-col :span="10" :offset="1" >
 			  			<el-form-item label="常用回复">
-			  				<el-select v-model="dialogForm.reply"></el-select>
+			  				<el-select v-model="dialogForm.quickReplyContent" @change="changeReply($event)">
+			  					<el-option v-for="reply in dialogForm.replyList" :label="reply.content" :value="reply.content"></el-option>
+			  				</el-select>
 			  			</el-form-item>
 			  		</el-col>
 			  		<el-col :span="10" :offset="2" >
-			  			<el-form-item label="申请回复">
-			  				 <el-input type="textarea" v-model="dialogForm.replyContent"></el-input>
+			  			<el-form-item label="申请回复" prop='reply' :rules="rules.ruleForReply">
+			  				 <el-input type="textarea" v-model="dialogForm.reply"></el-input>
 			  			</el-form-item>
 			  		</el-col>
 			  		<el-col :span="10" :offset="1" >
-			  			<el-form-item label="处理状态">
-			  				<el-select>
-			  					<el-option label="通过" value="1"></el-option>
+			  			<el-form-item label="处理状态" prop='status' :rules="{'required':true,'message':'请选择处理状态'}">
+			  				<el-select v-model="dialogForm.status">
+			  					<el-option label="通过"  value="1"></el-option>
 						        <el-option label="不通过" value="2"></el-option>
 			  				</el-select>
 			  			</el-form-item>
@@ -179,17 +182,30 @@
 	
 			  </el-form>
 			  <div slot="footer">
-			    <el-button @click="dialogFormVisible = false">取 消</el-button>
-			    <el-button type="primary" @click="confirmDialog">确 定</el-button>
+			    <el-button type="primary" @click="deleteDialog">删 除</el-button>
+			    <el-button type="primary" @click="confirmDialog">审 核</el-button>
+			    <el-button type="primary" @click="disableDialog">失 效</el-button>
+			    <el-button type="primary" @click="updateDialog">更 新</el-button>
 			  </div>
 		</el-dialog>
 	</div>
 </template>
 
 <script>
-	import {getCompanys,getPorts,getUsersForPage} from '@/api'
+	import {getCompanys,getPorts,getUsersForPage,getDictionarys,getQuickReplay,updateUserById} from '@/api'
+	import {Message} from 'element-ui'
 	export default{
 		data:function(){
+			let ruleForContent = (rule, value, callback) => {
+				debugger;
+				console.log(rule)
+				console.log(value)
+				if(value.length == 0){
+					return callback(new Error('回复内容不能为空'));
+				}else if(value.length > 300){
+					return callback(new Error('回复内容过长，请重新输入'));
+				}
+			}	
 			return {
 
 				tableData:[],
@@ -217,12 +233,51 @@
 				companyList:[],
 				portList:[],
 				dialogForm:{
+					id:'',
 					name:'',
 					identityCard:'',
 					sex:'',
 					phone:'',
 					businessList:[],
-					boardingList:[]
+					boardingList:[],
+					replyList:'',
+					quickReplyContent:'',
+					reply:'',
+					status:'1'
+				},
+				//可以抽到VUEx里面
+				dictionarys:{
+					/*{
+						"index": "auth",
+					};*/
+					auth:{
+						"1": "临时搭靠外轮许可证办理",
+						"2": "随船工作证申请",
+						"3": "在港船舶移泊申请",
+						"4": "实际抵离港时间确保",
+						"5": "团队旅客出境申报",
+						"9": "取消靠泊计划"
+					},
+						/*{
+							"index": "boardMatter",
+						}*/
+					boardMatter:{	
+						"b0": "业务",
+						"b1": "供应",
+						"b2": "加油",
+						"b3": "加水",
+						"b4": "废旧回收",
+						"b5": "维修",
+						"b6": "绑扎",
+						"b7": "劳务",
+						"b8": "装卸",
+						"b9":"商品检验",
+						"b10": "船东",
+						"b11": "船员家属"
+					}
+				},
+				rules:{
+					ruleForReply:[{validator:ruleForContent, trigger: 'blur'}]
 				}
 		    
 			}	
@@ -245,6 +300,12 @@
 					$this.pageData.total = resp.returnValue.total;
 				}
 			})
+			getQuickReplay({module: "备案"},function(resp){
+				debugger;
+				console.log(JSON.stringify(resp.returnValue));
+				$this.dialogForm.replyList = resp.returnValue;
+			})
+			 
 		},
 		methods:{
 			/**
@@ -256,12 +317,8 @@
 				let $this = this;
 				getUsersForPage(this.pageObj,this.queryFormInfo,function(resp){
 					debugger;
-					if(resp.returnValue && resp.returnValue.total > 0){
-						$this.tableData = resp.returnValue.rows;
-						$this.pageData.total = resp.returnValue.total;
-
-					}
-
+					$this.tableData = resp.returnValue.rows;
+					$this.pageData.total = resp.returnValue.total;
 				})
 
 				
@@ -278,15 +335,98 @@
 				})
 
 			},
-			dblClick:function(currentData){
+			dblClick:function(currentRowData){
 				debugger;
-				console.log(currentData);
+				let $this = this;
+
 				this.dialogFormVisible = true;
+				this.dialogForm.id = currentRowData.id;
+				this.dialogForm.name = currentRowData.name;
+				this.dialogForm.identityCard = currentRowData.identityCard;
+				this.dialogForm.sex = currentRowData.sex;
+				this.dialogForm.phone = currentRowData.phone;
+				this.dialogForm.businessList = [];
+				this.dialogForm.boardingList = [];
+				this.dialogForm.quickReplyContent = '';
+				this.dialogForm.reply = '';
+				this.dialogForm.status = '1';
+
+
+				let authority = currentRowData.authority.split(',');
+				authority.forEach(function(item,index){
+					if($this.dictionarys.auth[item]){
+						$this.dialogForm.businessList.push($this.dictionarys.auth[item]);
+					}else if($this.dictionarys.boardMatter[item]){
+						$this.dialogForm.boardingList.push($this.dictionarys.boardMatter[item]);
+					}
+				})
+
+			},
+			changeReply:function(item){
+				debugger;
+				this.dialogForm.reply = item;
+			},
+			deleteDialog:function(){
+
 			},
 			confirmDialog:function(){
 				debugger;
 				console.log('aa');
+				let $this = this;
+				let auth = [];
+				/**
+				 *1 Object.keys先拿到所有的key  [1,2,3,4,5,9]
+				 *2 对key.forEach(),比如拿到1  
+				 *3 判断 1对应的 '临时搭靠外轮许可证办理' 是否存在于businessList中
+				 *4 如果存在将1 放入auth中                                         
+				 */
+				Object.keys(this.dictionarys.auth).forEach(function(item,index){
+					console.log($this.dictionarys.auth[item]);
+					if($this.dialogForm.businessList.indexOf($this.dictionarys.auth[item]) !=-1){
+
+						auth.push(item);
+					}
+				})
+
+				Object.keys(this.dictionarys.boardMatter).forEach(function(item,index){
+					if($this.dialogForm.boardingList.indexOf($this.dictionarys.boardMatter[item]) !=-1){
+						auth.push(item);
+					}
+				})
+				
+				let data = {
+					id:this.dialogForm.id,
+					authority: auth.join(','),
+					phone: this.dialogForm.phone,
+					sex: this.dialogForm.sex,
+					//startTime: getNowFormatDate(),因为不再有失效的概念，所有不考虑时间了	
+					reply: this.dialogForm.reply,
+					status: this.dialogForm.status,
+				}
+				
+				updateUserById(data,function(resp){
+					Message.success({
+						message:"更新成功"
+					})
+					//关闭弹框
+					$this.dialogFormVisible = false;
+					//更新表格
+					getUsersForPage($this.pageObj,$this.queryFormInfo,function(resp){
+						debugger;
+						$this.tableData = resp.returnValue.rows;
+					})	
+
+				})
+
+			},
+
+			disableDialog:function(){
+
+			},
+			updateDialog:function(){
+
 			}
+
 
 		}
 	}
