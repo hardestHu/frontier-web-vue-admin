@@ -46,6 +46,14 @@
 				if(resp.returnValue){
 
 					$this.userName = resp.returnValue.nickName?resp.returnValue.nickName:resp.returnValue.userName;
+
+					//TODO可不可以通过vuex保存
+					if(resp.returnValue.organization && resp.returnValue.organization.level){
+                        $this.$store.commit('storeRoleLevel',resp.returnValue.organization.level);
+	                }
+                    if(resp.returnValue.commonRegionId != "-1"){
+                    	$this.$store.commit("storePortId",resp.returnValue.commonRegionId);
+                    }
 				}else{
 					Router.push('/')
 				}

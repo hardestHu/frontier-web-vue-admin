@@ -26,13 +26,14 @@
 	
 	import HeadTop from './common/HeadTop'
 	import SiderBar from './common/SiderBar'
-	import FootBottom from './common/FootBottom.vue'
+	import FootBottom from './common/FootBottom'
+	
 	export default {
 		name:'detail',
 		components:{
 			HeadTop,
 			SiderBar,
-			FootBottom
+			FootBottom,
 		}
 	}
 

@@ -1,66 +1,8 @@
 <template>
 	<div>
-		<el-row style="padding-bottom: 10px;">
-			<el-col :span="4">
-				<span style="font-family: 'Source Sans Pro', sans-serif;font-size:24px;color:black">备案注册申请</span>
-			</el-col>
-			<el-col :span="4" :offset="16" style="padding-top: 16px">
-				<el-breadcrumb separator-class="el-icon-arrow-right">
-				  	<el-breadcrumb-item :to="{ path: 'home' }">首页</el-breadcrumb-item>
-				    <el-breadcrumb-item>备案注册申请</el-breadcrumb-item>
-				</el-breadcrumb>
-			</el-col>
+		<bread-title :currentTitle="title"></bread-title>
+		<query-form :formTemplate="formTemplate" @queryData="onSubmit"></query-form>
 			
-		</el-row>
-
-		<el-row>
-			<el-form :inline="true" label-position="right" label-width="70px"  size="mini" :model="queryFormInfo">
-				<el-col :xs="24" :sm="12" :md="7" :lg="7" :xl="7" :offset="1">
-					<el-form-item label="处理状态">
-					    <el-select v-model="queryFormInfo.status">
-					    	<el-option label="待执勤人员审核" value="0"></el-option>
-					        <el-option label="通过" value="1"></el-option>
-					        <el-option label="未通过" value="2"></el-option>
-					        <el-option label="未备案" value="5"></el-option>
-					        <el-option label="已失效" value="6"></el-option>
-					        <el-option label="查询全部" value=""></el-option>
-					    </el-select>
-					</el-form-item>
-				</el-col>
-				
-				<el-col :xs="24" :sm="12" :md="7" :lg="7" :xl="7" :offset="1">
-					<el-form-item label="所属公司">
-					    <el-select v-model="queryFormInfo.companyName">
-					    	<el-option label="查询全部" value=""></el-option>
-					        <el-option v-for="company in companyList" :label="company.companyName" :value="company.companyName" ></el-option>
-					       
-					    </el-select>
-					</el-form-item>
-				</el-col>
-				
-				<el-col :xs="24" :sm="12" :md="7" :lg="7" :xl="7" :offset="1">
-					<el-form-item label="所属港口">
-					    <el-select v-model="queryFormInfo.portId">
-					        <el-option label="查询全部" value=""></el-option>
-					        <el-option v-for="port in portList" :label="port.portName" :value="port.id"></el-option>
-					    </el-select>
-					</el-form-item>
-				</el-col>
-				
-				<el-col :xs="24" :sm="12" :md="7" :lg="7" :xl="7" :offset="1">
-					<el-form-item label="身份证号">
-					    <el-input v-model="queryFormInfo.identityCard"></el-input>
-					</el-form-item>
-				</el-col>
-
-				<el-col :xs="7" :sm="7" :md="7" :lg="7" :xl="7" :offset="1">
-					<el-form-item>
-					    <el-button type="primary" @click="onSubmit">查询</el-button>
-					</el-form-item>	
-				</el-col>
-			</el-form>
-		</el-row>
-
 		<el-row>
 			<el-table :data="tableData" :stripe="true" size="small" :highlight-current-row="true" @row-dblclick="dblClick($event)">
 			    <el-table-column prop="name" label="姓名" min-width="60px">
@@ -89,7 +31,7 @@
 		</el-row>
 		<!-- 分页 -->
 		<el-row class="pageComponent">
-			<el-pagination background layout="prev, pager, next" :page-size="pageData.pageSize"  :total="pageData.total" @current-change="selectCurrentPage($event)"></el-pagination>
+			<el-pagination background layout="prev, pager, next" :current-page.sync="pageData.currentPage" :page-size="pageData.pageSize"  :total="pageData.total" @current-change="selectCurrentPage($event)"></el-pagination>
 		</el-row>
 
 		<!-- Form   弹框编辑-->
@@ -157,7 +99,7 @@
 			  		</el-col>
 			  	</el-row>	
 
-			  	<el-row>
+			  	<el-row v-if="dialogForm.status == 0">
 			  		<el-col :span="10" :offset="1" >
 			  			<el-form-item label="常用回复">
 			  				<el-select v-model="dialogForm.quickReplyContent" @change="changeReply($event)">
@@ -183,17 +125,19 @@
 			  </el-form>
 			  <div slot="footer">
 			    <el-button type="primary" @click="deleteDialog">删 除</el-button>
-			    <el-button type="primary" @click="confirmDialog">审 核</el-button>
-			    <el-button type="primary" @click="disableDialog">失 效</el-button>
-			    <el-button type="primary" @click="updateDialog">更 新</el-button>
+			    <el-button type="primary" @click="confirmDialog" v-if="dialogForm.status == '0'">审 核</el-button>
+			    <!-- <el-button type="primary" @click="disableDialog">失 效</el-button> -->
+			    <el-button type="primary" @click="updateDialog" v-if="dialogForm.status == '1'">更 新</el-button>
 			  </div>
 		</el-dialog>
 	</div>
 </template>
 
 <script>
-	import {getCompanys,getPorts,getUsersForPage,getDictionarys,getQuickReplay,updateUserById} from '@/api'
+	import {getCompanys,getPorts,getUsersForPage,getDictionarys,getQuickReplay,updateUserById,deleteUserById,updateUserAuthorityById} from '@/api'
 	import {Message} from 'element-ui'
+	import BreadTitle from  '../common/BreadTitle'
+	import QueryForm from '../common/QueryForm'
 	export default{
 		data:function(){
 			let ruleForContent = (rule, value, callback) => {
@@ -207,7 +151,39 @@
 				}
 			}	
 			return {
-
+				title:'备案注册申请',
+				formTemplate:{
+							button:
+								{"add":false},	
+							model:[{
+								name:"status",
+								type:'select',
+								title:"处理状态",
+								data:[{"label":"待执勤人员审核", "value":"0"},{"label":"通过", value:"1"},{"label":"未通过", value:"2"},
+									  {"label":"未备案", value:"5"},{"label":"已失效", value:"6"},{"label":"查询全部",value:""}],
+								value:'0'
+							},
+							{
+								name:"companyName",
+								type:"select",
+								title:"所属公司",
+								data:[],
+								value:''
+							},
+							{
+								name:'portId',
+								type:"select",
+								title:"所属港口",
+								data:[],
+								value:''
+							},
+							{
+								name:'identityCard',
+								type:"text",
+								title:"身份证号",
+								value:'',
+							}]
+						},
 				tableData:[],
 		        dialogFormVisible: false,
 				formLabelWidth: '120px',
@@ -228,10 +204,10 @@
 				//分页组件变量
 				pageData:{
 					total:1,
-					pageSize:10
+					pageSize:10,
+					currentPage:1
 				},
-				companyList:[],
-				portList:[],
+				//弹框
 				dialogForm:{
 					id:'',
 					name:'',
@@ -282,17 +258,16 @@
 		    
 			}	
 		},
+		components:{BreadTitle,QueryForm},
 		mounted:function(){
 			let $this = this;
-			getCompanys(function(resp){
-				debugger;
-				$this.companyList = resp.returnValue;
-			})
-			getPorts(function(resp){
-				debugger;
-				$this.portList = resp.returnValue;
-			})
+			//公司名字下拉列表
+			this.formTemplate.model[1].data = this.$store.state.companyList;
+			//港口名称下拉列表
+			this.formTemplate.model[2].data = this.$store.state.portList;
 			
+			//初始化表格数据
+			this.queryFormInfo.portId = this.$store.state.portId;
 			getUsersForPage(this.pageObj,this.queryFormInfo,function(resp){
 				debugger;
 				if(resp.returnValue && resp.returnValue.total > 0){
@@ -300,6 +275,7 @@
 					$this.pageData.total = resp.returnValue.total;
 				}
 			})
+			//审批回复用语
 			getQuickReplay({module: "备案"},function(resp){
 				debugger;
 				console.log(JSON.stringify(resp.returnValue));
@@ -312,16 +288,22 @@
 			 * [onSubmit 查询数据]
 			 * @return {[type]} [description]
 			 */
-			onSubmit:function(){
+			onSubmit:function(data){
 				debugger;
 				let $this = this;
-				getUsersForPage(this.pageObj,this.queryFormInfo,function(resp){
+				this.queryFormInfo = data;
+				this.pageObj = {
+					page: 1, //当前页
+		            rows: 10, //每页条数
+		            sort: "", //排序字段
+		            order: "" //排序顺序
+				};
+				getUsersForPage(this.pageObj,data,function(resp){
 					debugger;
 					$this.tableData = resp.returnValue.rows;
 					$this.pageData.total = resp.returnValue.total;
+					$this.$set($this.pageData,'currentPage',1);
 				})
-
-				
 			},
 			
 			selectCurrentPage:function(currentPageNum){
@@ -367,7 +349,21 @@
 				this.dialogForm.reply = item;
 			},
 			deleteDialog:function(){
-
+				debugger;
+				let id = this.dialogForm.id;
+				let $this = this;
+				deleteUserById(id,function(resp){
+					Message.success({
+						message:"删除成功"
+					})
+					//关闭弹框
+					$this.dialogFormVisible = false;
+					//更新表格
+					getUsersForPage($this.pageObj,$this.queryFormInfo,function(resp){
+						debugger;
+						$this.tableData = resp.returnValue.rows;
+					})	
+				})
 			},
 			confirmDialog:function(){
 				debugger;
@@ -421,9 +417,45 @@
 			},
 
 			disableDialog:function(){
-
+				//todo 已经没有失效一说，是不是就可以不用管了
 			},
 			updateDialog:function(){
+				debugger;
+				let $this = this;
+				let auth = [];
+				Object.keys(this.dictionarys.auth).forEach(function(item,index){
+					console.log($this.dictionarys.auth[item]);
+					if($this.dialogForm.businessList.indexOf($this.dictionarys.auth[item]) !=-1){
+						auth.push(item);
+					}
+				})
+
+				Object.keys(this.dictionarys.boardMatter).forEach(function(item,index){
+					if($this.dialogForm.boardingList.indexOf($this.dictionarys.boardMatter[item]) !=-1){
+						auth.push(item);
+					}
+				})
+				
+				let data = {
+					id: this.dialogForm.id,
+					authority: auth.join(','),
+					phone: this.dialogForm.phone,
+					sex: this.dialogForm.sex,
+				}
+
+				updateUserAuthorityById(data,function(resp){
+					Message.success({
+						message:"更新成功"
+					})
+					//关闭弹框
+					$this.dialogFormVisible = false;
+					//更新表格
+					getUsersForPage($this.pageObj,$this.queryFormInfo,function(resp){
+						debugger;
+						$this.tableData = resp.returnValue.rows;
+					})	
+				})
+
 
 			}
 
@@ -432,16 +464,16 @@
 	}
 </script>
 <style>
-	.pageComponent{
-		float: right;
-    	padding-top: 10px;
-	}
-	.el-table--small td, .el-table--small th {
-    	padding: 5px 0;
-	}
-	.el-checkbox-group .el-checkbox{
-		margin-left:0;
-		margin-right:15px;
-	}
+.pageComponent{
+    float: right;
+    padding-top: 10px;
+}
+.el-table--small td, .el-table--small th {
+    padding: 5px 0;
+}
+.el-checkbox-group .el-checkbox{
+    margin-left:0;
+    margin-right:15px;
+}
 
 </style>

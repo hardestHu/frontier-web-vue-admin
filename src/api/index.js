@@ -67,6 +67,7 @@ export function logout(success){
  * @return {[type]}         [description]
  */
 export function getCompanys(success){
+		debugger;
 	    $ajax({
 	    	method:'post',
 	    	url:'/company/getCompanys',
@@ -110,6 +111,7 @@ export function getQuickReplay(data,success){
 				data:data
 			}).then(success)
 }
+
 /*record_person 相关*/
 /**
  * [updateUserById 审批注册申请接口]
@@ -121,6 +123,33 @@ export function updateUserById(data,success){
 		$ajax({
 			method:"post",
 			url:"/user/updateUserById",
+			data:data
+		}).then(success)
+}
+/**
+ * 
+ * @param  {[string]} id      [申请记录partyid]
+ * @param  {[function]} success [接口成功后调用的处理函数]
+ */
+export function deleteUserById(id,success){
+		$ajax({
+			method:"get",
+			url:"/user/deleteUserById?id="+id,
+		}).then(success)
+}
+
+export function updateUserAuthorityById(data,success){
+		$ajax({
+			method:'post',
+			url:"/user/updateUserAuthorityById",
+			data:data
+		}).then(success)
+}
+/*border_general 相关*/
+export function getBoardingsForPage(pageObj,data,success){
+		$ajax({
+			method:'post',
+			url:"/boarding/getBoardingsForPage?"+qs.stringify(pageObj),
 			data:data
 		}).then(success)
 }
