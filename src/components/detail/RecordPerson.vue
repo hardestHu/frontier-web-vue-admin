@@ -70,30 +70,30 @@
 			  		<el-col :span="22" :offset="1">
 			  			<el-form-item label="业务权限">
 			  			 	<el-checkbox-group v-model="dialogForm.businessList">
-							    <el-checkbox label="临时搭靠外轮许可证办理"></el-checkbox>
-							    <el-checkbox label="随船工作证申请"></el-checkbox>
-							    <el-checkbox label="在港船舶移泊申请"></el-checkbox>
-							    <el-checkbox label="实际抵离港时间确保"></el-checkbox>
-							    <el-checkbox label="团队旅客出境申报"></el-checkbox>
-							    <el-checkbox label="取消靠泊计划"></el-checkbox>
+							    <el-checkbox label="1">临时搭靠外轮许可证办理</el-checkbox>
+							    <el-checkbox label="2">随船工作证申请</el-checkbox>
+							    <el-checkbox label="3">在港船舶移泊申请</el-checkbox>
+							    <el-checkbox label="4">实际抵离港时间确保</el-checkbox>
+							    <el-checkbox label="5">团队旅客出境申报</el-checkbox>
+							    <el-checkbox label="9">取消靠泊计划</el-checkbox>
 							</el-checkbox-group>
 			  			</el-form-item>
 			  		</el-col>
 			  		<el-col :span="22" :offset="1">
 			  			<el-form-item label="登轮证权限">
 			  			 	<el-checkbox-group v-model="dialogForm.boardingList">
-							    <el-checkbox label="业务"></el-checkbox>
-							    <el-checkbox label="供应"></el-checkbox>
-							    <el-checkbox label="加油"></el-checkbox>
-							    <el-checkbox label="加水"></el-checkbox>
-							    <el-checkbox label="废旧回收"></el-checkbox>
-							    <el-checkbox label="维修"></el-checkbox>
-							    <el-checkbox label="劳务"></el-checkbox>
-							    <el-checkbox label="绑扎"></el-checkbox>
-							    <el-checkbox label="装卸"></el-checkbox>
-							    <el-checkbox label="商品检验"></el-checkbox>
-							    <el-checkbox label="船东"></el-checkbox>
-							    <el-checkbox label="船员家属"></el-checkbox>
+							    <el-checkbox label="b0">业务</el-checkbox>
+							    <el-checkbox label="b1">供应</el-checkbox>
+							    <el-checkbox label="b2">加油</el-checkbox>
+							    <el-checkbox label="b3">加水</el-checkbox>
+							    <el-checkbox label="b4">废旧回收</el-checkbox>
+							    <el-checkbox label="b5">维修</el-checkbox>
+							    <el-checkbox label="b6">劳务</el-checkbox>
+							    <el-checkbox label="b7">绑扎</el-checkbox>
+							    <el-checkbox label="b8">装卸</el-checkbox>
+							    <el-checkbox label="b9">商品检验</el-checkbox>
+							    <el-checkbox label="b10">船东</el-checkbox>
+							    <el-checkbox label="b11">船员家属</el-checkbox>
 							</el-checkbox-group>
 			  			</el-form-item>
 			  		</el-col>
@@ -128,6 +128,7 @@
 			    <el-button type="primary" @click="confirmDialog" v-if="dialogForm.status == '0'">审 核</el-button>
 			    <!-- <el-button type="primary" @click="disableDialog">失 效</el-button> -->
 			    <el-button type="primary" @click="updateDialog" v-if="dialogForm.status == '1'">更 新</el-button>
+			   
 			  </div>
 		</el-dialog>
 	</div>
@@ -216,12 +217,12 @@
 					phone:'',
 					businessList:[],
 					boardingList:[],
-					replyList:'',
+					replyList:[],
 					quickReplyContent:'',
 					reply:'',
 					status:'1'
 				},
-				//可以抽到VUEx里面
+				//可以抽到VUEx里面,可以删掉了
 				dictionarys:{
 					/*{
 						"index": "auth",
@@ -278,7 +279,6 @@
 			//审批回复用语
 			getQuickReplay({module: "备案"},function(resp){
 				debugger;
-				console.log(JSON.stringify(resp.returnValue));
 				$this.dialogForm.replyList = resp.returnValue;
 			})
 			 
@@ -333,15 +333,17 @@
 				this.dialogForm.reply = '';
 				this.dialogForm.status = '1';
 
-
-				let authority = currentRowData.authority.split(',');
-				authority.forEach(function(item,index){
-					if($this.dictionarys.auth[item]){
-						$this.dialogForm.businessList.push($this.dictionarys.auth[item]);
-					}else if($this.dictionarys.boardMatter[item]){
-						$this.dialogForm.boardingList.push($this.dictionarys.boardMatter[item]);
-					}
-				})
+				if(currentRowData.authority != null || currentRowData.authority != ''){
+					let authority = currentRowData.authority.split(',');
+					authority.forEach(function(item,index){
+						if(/^b\d+$/.test(item)){
+							$this.dialogForm.boardingList.push(item)
+						}else{
+							$this.dialogForm.businessList.push(item);
+						}
+					})
+				}
+				
 
 			},
 			changeReply:function(item){
@@ -370,26 +372,7 @@
 				console.log('aa');
 				let $this = this;
 				let auth = [];
-				/**
-				 *1 Object.keys先拿到所有的key  [1,2,3,4,5,9]
-				 *2 对key.forEach(),比如拿到1  
-				 *3 判断 1对应的 '临时搭靠外轮许可证办理' 是否存在于businessList中
-				 *4 如果存在将1 放入auth中                                         
-				 */
-				Object.keys(this.dictionarys.auth).forEach(function(item,index){
-					console.log($this.dictionarys.auth[item]);
-					if($this.dialogForm.businessList.indexOf($this.dictionarys.auth[item]) !=-1){
-
-						auth.push(item);
-					}
-				})
-
-				Object.keys(this.dictionarys.boardMatter).forEach(function(item,index){
-					if($this.dialogForm.boardingList.indexOf($this.dictionarys.boardMatter[item]) !=-1){
-						auth.push(item);
-					}
-				})
-				
+				auth = [].concat($this.dialogForm.businessList,$this.dialogForm.boardingList);
 				let data = {
 					id:this.dialogForm.id,
 					authority: auth.join(','),
@@ -444,16 +427,20 @@
 				}
 
 				updateUserAuthorityById(data,function(resp){
-					Message.success({
-						message:"更新成功"
-					})
-					//关闭弹框
-					$this.dialogFormVisible = false;
-					//更新表格
-					getUsersForPage($this.pageObj,$this.queryFormInfo,function(resp){
-						debugger;
-						$this.tableData = resp.returnValue.rows;
-					})	
+					if(resp.continue){
+						Message.success({
+							message:"更新成功"
+						})
+						//关闭弹框
+						$this.dialogFormVisible = false;
+						//更新表格
+						getUsersForPage($this.pageObj,$this.queryFormInfo,function(resp){
+							debugger;
+							$this.tableData = resp.returnValue.rows;
+							$this.pageData.total = resp.returnValue.total;
+						})	
+					}
+					
 				})
 
 

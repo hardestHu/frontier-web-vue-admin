@@ -153,3 +153,11 @@ export function getBoardingsForPage(pageObj,data,success){
 			data:data
 		}).then(success)
 }
+
+export function updateBoardingById(data, success) {
+        $ajax({
+            method: "post",
+            url: "/boarding/updateBoardingById",
+            data:data
+        }).then(success)
+}

@@ -1,7 +1,7 @@
 <template>
 	<div>
 		<bread-title :currentTitle="title"></bread-title>
-		<query-form :formTemplate="formTemplate" @queryData="onSubmit"></query-form>
+		<query-form :formTemplate="formTemplate" @queryData="onSubmit" @addData="addBoard"></query-form>
 		<el-row>
 			<el-table :data="tableData" :stripe="true" size="small" :highlight-current-row="true" @row-dblclick="dblClick($event)"@sort-change="sortChange($event)" >
 			    <el-table-column prop="name" label="姓名" min-width="60px">
@@ -48,10 +48,10 @@
 			<el-pagination background layout="prev, pager, next" :page-size="pageData.pageSize"  :total="pageData.total" :current-page.sync="pageData.currentPage" @current-change="selectCurrentPage($event)"></el-pagination>
 		</el-row>
 
-		<!-- 弹框 -->
+		<!-- 审批弹框 -->
 
 		<el-dialog title="临时登轮证详细信息" :visible.sync="dialogFormVisible" width="80%" >
-			  <el-form :model="dialogForm"  :inline="true" size="mini" label-position="right" label-suffix=" :">
+			<el-form :model="dialogForm"  :inline="true" size="mini" label-position="right" label-suffix=" :" ref="dialogForm">
 			  	<el-row>
 			  		<el-col :span="7" :offset='1'>
 			  			<el-form-item label="姓名">
@@ -123,8 +123,9 @@
 				<el-row>
 					<el-col :span="11" :offset="1">
 						<el-form-item label="起止时间">
-							<el-date-picker v-model="dialogForm.rangTime" type="daterange" range-separator="~"start-placeholder="开始日期" end-placeholder="结束日期">
+							<el-date-picker v-model="dialogForm.rangeTime" type="daterange" range-separator="~"start-placeholder="开始日期" end-placeholder="结束日期" v-if="dialogForm.currentStatus == '0'">
 							    </el-date-picker>
+							    <span v-else> {{dialogForm.rangeTime[0]+'~'+dialogForm.rangeTime[1]}}</span>
 					    </el-form-item>	
 					</el-col>
 					<el-col :span="11" :offset="1">
@@ -133,50 +134,150 @@
 					    </el-form-item>	
 					</el-col>
 					
-					<el-col :span="11" :offset="1">
-						<el-form-item label="二维码">
-							 <el-input type="textarea" v-model="dialogForm.qrcode" :autosize="{minRows: 4,maxRows:8}" style="width:360px"></el-input>
-					    </el-form-item>	
-					</el-col>
 
 					<el-col :span="11" :offset="1">
 						<el-form-item label="处理状态">
-							<el-radio-group v-model="dialogForm.status">
+							<el-radio-group v-model="dialogForm.status" v-if="dialogForm.currentStatus == '0'">
 						      <el-radio label="1">通过</el-radio>
 						      <el-radio label="2">不通过</el-radio>
 						    </el-radio-group>					
+					  		<span v-else>{{dialogForm.currentStatus == '1'?'通过':'不通过'}}</span>	
+					    </el-form-item>	
+
+					</el-col>
+
+					<el-col :span="11" :offset="1">
+						<el-form-item label="二维码" prop="qrcode" :rules="rules.ruleForQrcode" ref='qrcode'>
+							 <el-input type="textarea" v-model="dialogForm.qrcode" :autosize="{minRows: 4,maxRows:8}" style="width:360px" :disabled="dialogForm.status == '2'" v-if="dialogForm.currentStatus == '0'"></el-input>
+							 <span v-else>{{dialogForm.qrcodeText}}</span>
+
 					    </el-form-item>	
 					</el-col>
-					
-					
 
+					
+					
 
 				</el-row>
 				<el-row>
-					<el-col :span="11" :offset="1">
+					<el-col :span="11" :offset="1" v-if="dialogForm.currentStatus == '0'">
 						<el-form-item label="常用回复">
-				  			<el-select v-model="dialogForm.quickReplyContent" @change="changeReply($event)">
+				  			<el-select v-model="dialogForm.quickReplyContent" @change="changeReply($event)" :disabled="dialogForm.status == '2'">
 				  				<el-option v-for="reply in dialogForm.replyList" :label="reply.content" :value="reply.content"></el-option>
 				  			</el-select>
 				  		</el-form-item>
 					</el-col>
 
 					<el-col :span="11" :offset="1" >
-				  		<el-form-item label="回复内容" prop='reply'>
-				  			 <el-input type="textarea" v-model="dialogForm.reply" :rows="4" style='width:360px'></el-input>
+				  		<el-form-item label="回复内容" prop='reply' :rules="rules.ruleForReply" ref='reply' >
+				  			 <el-input type="textarea" v-model="dialogForm.reply" :rows="4" style='width:360px' v-if="dialogForm.currentStatus == '0'"></el-input>
+				  			 <span v-else>{{dialogForm.replyText}}</span>
+				  		</el-form-item>
+				  	</el-col>
+
+		
+				  	<el-col :span="11" :offset="1" v-if="dialogForm.currentStatus != '0'">
+				  		<el-form-item label="处理人" >
+				  			 <span>{{dialogForm.serviceCode}}</span>
 				  		</el-form-item>
 				  	</el-col>
 				</el-row>
 
 		
 	
-			  </el-form>
-			 <!--  <div slot="footer">
-			   <el-button type="primary" @click="deleteDialog">删 除</el-button>
-			   <el-button type="primary" @click="confirmDialog" v-if="dialogForm.status == '0'">审 核</el-button>
-			   <el-button type="primary" @click="disableDialog">失 效</el-button>
-			   <el-button type="primary" @click="updateDialog" v-if="dialogForm.status == '1'">更 新</el-button>
-			 </div> -->
+			</el-form>
+			<div slot="footer">
+				<el-button type="primary" @click="dialogFormVisible = false" v-if="dialogForm.currentStatus == '0'">取 消</el-button>
+				<el-button type="primary" @click="updateDialog('dialogForm')" v-if="dialogForm.currentStatus == '0'">保 存</el-button>
+				<el-button type="primary" @click="dialogFormVisible = false" v-else>关 闭</el-button>
+			</div>
+		</el-dialog>
+
+		<!-- 新增弹框 -->
+		<el-dialog title="新增登轮证" :visible.sync="addDialogFormVisible" width="60%" >
+			<el-form :model="addDialogForm"  :inline="true" size="mini" label-position="right" label-suffix=" :" ref="addDialogForm">
+				<el-row>
+					<el-col :span='11' :offset='1'>
+						<el-form-item label="姓名" prop="name">
+							<el-input type="text" v-model="addDialogForm.name">
+							</el-input>
+						</el-form-item>
+					</el-col>
+					<el-col :span='11' :offset='1'>
+						<el-form-item label="身份证号" prop="identityCard">
+							<el-input type="text" v-model="addDialogForm.identityCard">
+							</el-input>
+						</el-form-item>
+					</el-col>
+					<el-col :span='11' :offset='1'>
+						<el-form-item label="性别" prop="sex">
+							<el-input type="text" v-model="addDialogForm.sex">
+							</el-input>
+						</el-form-item>
+					</el-col>
+					<el-col :span='11' :offset='1'>
+						<el-form-item label="职务" prop="duty">
+							<el-input type="text" v-model="addDialogForm.duty">
+							</el-input>
+						</el-form-item>
+					</el-col>
+					<el-col :span='11' :offset='1'>
+						<el-form-item label="登轮事由" prop="matter">
+							<el-input type="text" v-model="addDialogForm.matter">
+							</el-input>
+						</el-form-item>
+					</el-col>
+					<el-col :span='11' :offset='1'>
+						<el-form-item label="港口" prop="portId">
+							<el-input type="text" v-model="addDialogForm.portId">
+							</el-input>
+						</el-form-item>
+					</el-col>
+					<el-col :span='11' :offset='1'>
+						<el-form-item label="所登船舶" prop="shipName">
+							<el-input type="text" v-model="addDialogForm.shipName">
+							</el-input>
+						</el-form-item>
+					</el-col>
+
+					<el-col :span='11' :offset='1'>
+						<el-form-item label="单位" prop="companyName">
+							<el-input type="text" v-model="addDialogForm.companyName">
+							</el-input>
+						</el-form-item>
+					</el-col>
+
+					<el-col :span='11' :offset='1'>
+						<el-form-item label="有效期起" prop="startTime">
+							<el-input type="text" v-model="addDialogForm.startTime">
+							</el-input>
+						</el-form-item>
+					</el-col>
+					
+					<el-col :span='11' :offset='1'>
+						<el-form-item label="有效期止" prop="endTime">
+							<el-input type="text" v-model="addDialogForm.endTime">
+							</el-input>
+						</el-form-item>
+					</el-col>
+					
+					
+					<el-col :span='11' :offset='1'>
+						<el-form-item label="本航次有效" prop="enabled">
+							<el-input type="text" v-model="addDialogForm.enabled">
+							</el-input>
+						</el-form-item>
+					</el-col>
+
+					<el-col :span='11' :offset='1'>
+						<el-form-item label="期限" prop="termFlag">
+							<el-input type="text" v-model="addDialogForm.termFlag">
+							</el-input>
+						</el-form-item>
+					</el-col>
+					
+
+				</el-row>
+			</el-form>
 		</el-dialog>
 
 	</div>
@@ -184,9 +285,28 @@
 <script>
 	import BreadTitle from '../common/BreadTitle'
 	import QueryForm from '../common/QueryForm'
-	import {getDictionarys,getBoardingsForPage} from '@/api'
+	import {getDictionarys,getBoardingsForPage,getQuickReplay,updateBoardingById} from '@/api'
 	export default {
 		data:function(){
+			let ruleForContent = (rule, value, callback) => {
+				debugger;
+				if(value.length == 0){
+					return callback(new Error('回复内容不能为空'));
+				}else if(value.length > 300){
+					return callback(new Error('回复内容过长，请重新输入'));
+				}else {
+					return callback();
+				}
+			}	
+			let ruleForQrcode = (rule, value, callback) => {
+				debugger;
+				if(value.length == 0){
+					return callback(new Error('请输入二维码!'));
+				}else{
+					return callback();
+				}
+			}
+
 			return {
 				title:"上下外国船舶许可",
 				formTemplate:{
@@ -246,13 +366,27 @@
 					matter:'',
 					applyTime:'',
 					hasChildren:'',
-					businessList:[],
-					boardingList:[],
-					replyList:'',
+					rangeTime:"",
+					enabled:"",
+					replyList:[],
+					qrcode:'',
 					quickReplyContent:'',
 					reply:'',
-					status:'1'
+					status:'',
+					currentStatus:'',
+					qrcodeText:"",//用于展示态下二维码展示
+					replyText:'',//同上
+					serviceCode:""//同上
 				},
+				//新增按钮的弹框
+				addDialogFormVisible:false,
+				addDialogForm:{
+					name:""
+				},
+				rules:{
+					ruleForQrcode:[{validator:ruleForQrcode,tigger: 'blur'}],
+					ruleForReply:[{required:true,validator:ruleForContent, trigger: 'blur'}]
+				}
 			}
 		},
 		components:{
@@ -283,6 +417,12 @@
 				}
 			})
 
+			//初始化审批框的快速回复下拉
+			getQuickReplay({"module": "许可证"},function(resp){
+				debugger;
+				$this.dialogForm.replyList = resp.returnValue;
+			})
+
 		},
 		methods:{
 			onSubmit:function(data){
@@ -303,6 +443,10 @@
 					$this.pageData.currentPage = 1;
 
 				})
+			},
+			addBoard:function(){
+				debugger;
+				this.addDialogFormVisible = true;
 			},
 			selectCurrentPage:function(currentPageNum){
 				debugger;
@@ -329,10 +473,10 @@
 			},
 			dblClick:function(currentRowData){
 				debugger;
-				console.log(JSON.stringify(currentRowData));
 				
 				this.dialogFormVisible = true;	
 
+				this.dialogForm.id = currentRowData.id;
 				this.dialogForm.name = currentRowData.name;
 				this.dialogForm.sex = currentRowData.sex;
 				this.dialogForm.birthDate = currentRowData.birthDate;
@@ -343,12 +487,85 @@
 				this.dialogForm.applyTime = currentRowData.applyTime;
 				this.dialogForm.matter = currentRowData.matter;
 				this.dialogForm.hasChildren = currentRowData.hasChildren;
-				this.dialogForm.rangTime = currentRowData.startTime+'~'+currentRowData.endTime;
-				this.dialogForm.enabled = currentRowData.enabled;
-				this.dialogForm.qrcode = currentRowData.qrcode;
-				this.dialogForm.status = currentRowData.status;
+				this.dialogForm.rangeTime = [currentRowData.startTime,currentRowData.endTime];
+				this.dialogForm.enabled = currentRowData.enabled == '1'?true:false;
+				
+				this.dialogForm.status = '1';
+				this.dialogForm.qrcode = "";
+				this.dialogForm.quickReplyContent = '';
+				this.dialogForm.reply = '';
+				//用来切换弹框是展示还是编辑状态
+				this.dialogForm.currentStatus = currentRowData.status;
+				this.dialogForm.qrcodeText = currentRowData.qrcode;
+				this.dialogForm.replyText = currentRowData.reply;
+				this.dialogForm.serviceCode = currentRowData.serviceCode;
+				//重置校验
+				if(this.$refs['dialogForm'] != undefined){
+			        this.$refs["dialogForm"].resetFields();  
+				}
 
-			}
+			},
+			changeReply:function(item){
+				debugger;
+				this.dialogForm.reply = item;
+			},
+			updateDialog:function(formName){
+				debugger;
+				let $this = this;
+				let valiResult = true;
+				if(this.dialogForm.status == '1'){
+					$this.$refs['dialogForm'].validate((valid)=>{
+						if(valid){
+							$this.updateBoarding();
+						}else{
+							return false
+						}
+					});
+
+				}else{
+					$this.$refs['dialogForm'].validateField('reply',(errorMesg)=>{
+						if(!errorMesg){
+							$this.updateBoarding();
+						}else{
+							return false
+						}
+					});
+				}
+					
+				
+			},
+			updateBoarding:function(){
+				let $this = this;
+				let boardDialog = {
+							id: this.dialogForm.id,
+							status: this.dialogForm.status,
+							qrcode: this.dialogForm.qrcode,
+							enabled: this.dialogForm.enabled == true ? '1':'2',
+							startTime: this.dialogForm.rangeTime[0],
+							endTime: this.dialogForm.rangeTime[1],
+							reply: this.dialogForm.reply
+						} 
+				updateBoardingById(boardDialog,function(resp){
+					if(resp.continue){
+						//关闭弹框
+						$this.dialogFormVisible = false;
+
+						//更新表格
+						getBoardingsForPage($this.pageObj,$this.queryFormInfo,function(resp){
+							debugger;
+							$this.tableData = resp.returnValue.rows;
+							$this.pageData.total = resp.returnValue.total;
+							$this.$message({
+				          		message: "更新成功",
+				          		type:"success"
+					        });	
+
+						})	
+					}
+				})
+
+			},
+
 
 		}
 
