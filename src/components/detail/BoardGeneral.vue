@@ -1,5 +1,5 @@
 <template>
-	<div>
+	<div class="board-general">
 		<bread-title :currentTitle="title"></bread-title>
 		<query-form :formTemplate="formTemplate" @queryData="onSubmit" @addData="addBoard"></query-form>
 		<el-row>
@@ -194,7 +194,7 @@
 
 		<!-- 新增弹框 -->
 		<el-dialog title="新增登轮证" :visible.sync="addDialogFormVisible" width="60%" >
-			<el-form :model="addDialogForm"  :inline="true" size="mini" label-position="right" label-suffix=" :" ref="addDialogForm">
+			<el-form :model="addDialogForm"  :inline="true" size="mini" label-position="right" label-width="90px" label-suffix=" :" ref="addDialogForm" :rules='rules.ruleForAddBoard'>
 				<el-row>
 					<el-col :span='11' :offset='1'>
 						<el-form-item label="姓名" prop="name">
@@ -210,8 +210,10 @@
 					</el-col>
 					<el-col :span='11' :offset='1'>
 						<el-form-item label="性别" prop="sex">
-							<el-input type="text" v-model="addDialogForm.sex">
-							</el-input>
+							<el-select v-model="addDialogForm.sex">
+								<el-option label="男" value="男"></el-option>
+								<el-option label="女" value="女"></el-option>
+							</el-select>
 						</el-form-item>
 					</el-col>
 					<el-col :span='11' :offset='1'>
@@ -222,14 +224,17 @@
 					</el-col>
 					<el-col :span='11' :offset='1'>
 						<el-form-item label="登轮事由" prop="matter">
-							<el-input type="text" v-model="addDialogForm.matter">
-							</el-input>
+							<el-select v-model="addDialogForm.matter">
+								<el-option :label="item.label" :value="item.value" v-for="item in addDialogForm.matterList"></el-option>	
+							</el-select>
 						</el-form-item>
 					</el-col>
 					<el-col :span='11' :offset='1'>
 						<el-form-item label="港口" prop="portId">
-							<el-input type="text" v-model="addDialogForm.portId">
-							</el-input>
+							<el-select v-model="addDialogForm.portId">
+								<el-option :label="item.label" :value="item.value" v-for="item in addDialogForm.portList" ></el-option>
+							</el-select>
+							
 						</el-form-item>
 					</el-col>
 					<el-col :span='11' :offset='1'>
@@ -246,38 +251,54 @@
 						</el-form-item>
 					</el-col>
 
-					<el-col :span='11' :offset='1'>
+					<!-- <el-col :span='11' :offset='1'>
 						<el-form-item label="有效期起" prop="startTime">
-							<el-input type="text" v-model="addDialogForm.startTime">
-							</el-input>
+							<el-date-picker v-model="addDialogForm.startTime" type="date" placeholder="选择日期">
+					    						</el-date-picker>
 						</el-form-item>
 					</el-col>
 					
 					<el-col :span='11' :offset='1'>
 						<el-form-item label="有效期止" prop="endTime">
-							<el-input type="text" v-model="addDialogForm.endTime">
-							</el-input>
+							<el-date-picker v-model="addDialogForm.endTime" type="date" placeholder="选择日期">
+					    						</el-date-picker>
 						</el-form-item>
-					</el-col>
+					</el-col> -->
 					
 					
 					<el-col :span='11' :offset='1'>
-						<el-form-item label="本航次有效" prop="enabled">
-							<el-input type="text" v-model="addDialogForm.enabled">
-							</el-input>
+						<el-form-item label="本航次有效">
+							<el-select v-model="addDialogForm.enabled">
+								<el-option label="有效" value="1"></el-option>
+								<el-option label="无效" value="0"></el-option>
+							</el-select>
 						</el-form-item>
 					</el-col>
 
 					<el-col :span='11' :offset='1'>
-						<el-form-item label="期限" prop="termFlag">
-							<el-input type="text" v-model="addDialogForm.termFlag">
-							</el-input>
+						<el-form-item label="期限">
+							<el-select v-model="addDialogForm.termFlag">
+								<el-option label="短期登轮证" value="0"></el-option>
+								<el-option label="长期登轮证" value="1"></el-option>
+							</el-select>
 						</el-form-item>
 					</el-col>
+
 					
+					<el-col :span='23' :offset='1'>
+						<el-form-item label="有效期限" prop="rangeTime">
+					    	<el-date-picker v-model="addDialogForm.rangeTime" type="daterange" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期" value-format="yyyy-MM-dd">
+
+    						</el-date-picker>						
+						</el-form-item>
+					</el-col>
 
 				</el-row>
 			</el-form>
+			<div slot="footer">
+				<el-button @click="addDialogFormVisible = false">取 消</el-button>
+      			<el-button type="primary" @click="confirmAddBoard">确 认</el-button>
+			</div>
 		</el-dialog>
 
 	</div>
@@ -285,7 +306,7 @@
 <script>
 	import BreadTitle from '../common/BreadTitle'
 	import QueryForm from '../common/QueryForm'
-	import {getDictionarys,getBoardingsForPage,getQuickReplay,updateBoardingById} from '@/api'
+	import {getDictionarys,getBoardingsForPage,getQuickReplay,updateBoardingById,cardIdValid,startendValid,insertBoarding} from '@/api'
 	export default {
 		data:function(){
 			let ruleForContent = (rule, value, callback) => {
@@ -306,7 +327,19 @@
 					return callback();
 				}
 			}
-
+			let validateId = (rule, value, callback) => {
+				debugger;
+				if(value.length == 0){
+					return callback(new Error('请输入身份证号'));
+				}else{
+					let message = cardIdValid(value);
+					if(!message.code){
+						return callback(new Error(message.msg));
+					}else{
+						return callback();
+					}
+				}
+			}
 			return {
 				title:"上下外国船舶许可",
 				formTemplate:{
@@ -381,11 +414,32 @@
 				//新增按钮的弹框
 				addDialogFormVisible:false,
 				addDialogForm:{
-					name:""
+					name:"",
+					identityCard:"",
+					sex:"男",
+					duty:"",
+					matter:"业务",
+					portId:"1835150862795776",
+					shipName:"",
+					companyName:"",
+					rangeTime:[],
+					enabled:"1",
+					termFlag:"0",
+					portList:[],
+					matterList:[]
 				},
 				rules:{
-					ruleForQrcode:[{validator:ruleForQrcode,tigger: 'blur'}],
-					ruleForReply:[{required:true,validator:ruleForContent, trigger: 'blur'}]
+					ruleForQrcode:[{validator:ruleForQrcode,trigger: 'blur'}],
+					ruleForReply:[{required:true,validator:ruleForContent, trigger: 'blur'}],
+					ruleForAddBoard:{
+						name:[{required:true,message:"请填写姓名",trigger:'blur'}],
+						identityCard:[{required:true,validator:validateId,trigger:'blur'}],
+						duty:[{required:true,message:"请填写职务信息",trigger:'blur'}],
+						shipName:[{required:true,message:"请填写船舶名称",trigger:'blur'}],
+						companyName:[{required:true,message:"请填写单位名称",trigger:'blur'}],
+						rangeTime:[{required:true,message:"请选择日期",trigger:'blur'}]
+						
+					}
 				}
 			}
 		},
@@ -402,10 +456,20 @@
 					item.label = item.name;
 					item.value = item.name;
 				})
+				//添加弹框里的事由下拉，
+				$this.addDialogForm.matterList = JSON.parse(JSON.stringify(matterList));
+				//搜索表单里面的事由下拉
 				matterList.unshift({label:'请选择登轮事由',value:''});
 				$this.formTemplate.model[2].data = matterList;
+
 			})
+			//港口列表下拉
 			this.formTemplate.model[3].data = this.$store.state.portList;
+
+			
+			//新增登轮 弹框里的港口下拉, 利用深拷贝的一种方式
+			this.addDialogForm.portList = JSON.parse(JSON.stringify(this.$store.state.portList));
+			this.addDialogForm.portList.shift();
 
 			//初始化表格
 			this.queryFormInfo.portId = this.$store.state.portId;
@@ -447,6 +511,23 @@
 			addBoard:function(){
 				debugger;
 				this.addDialogFormVisible = true;
+
+			    this.addDialogForm.name = "";
+				this.addDialogForm.identityCard = "";
+				this.addDialogForm.sex = "男";
+				this.addDialogForm.duty = "";
+				this.addDialogForm.matter = "业务";
+				this.addDialogForm.portId = "1835150862795776";
+				this.addDialogForm.shipName = "";
+				this.addDialogForm.companyName = "";
+				this.addDialogForm.rangeTime = [];
+				this.addDialogForm.enabled = "1";
+				this.addDialogForm.termFlag = "0";
+				//重置校验
+				if(this.$refs['addDialogForm'] != undefined){
+			        this.$refs["addDialogForm"].resetFields();  
+				}
+
 			},
 			selectCurrentPage:function(currentPageNum){
 				debugger;
@@ -565,6 +646,44 @@
 				})
 
 			},
+			confirmAddBoard:function(){
+				debugger;
+				let $this = this;
+				let data = {}
+				data.name = this.addDialogForm.name;
+				data.identityCard = this.addDialogForm.identityCard;
+				data.sex = this.addDialogForm.sex;
+				data.duty = this.addDialogForm.duty;
+				data.matter = this.addDialogForm.matter;
+				data.portId = this.addDialogForm.portId;
+				data.shipName = this.addDialogForm.shipName;
+				data.companyName = this.addDialogForm.companyName;
+				data.startTime = this.addDialogForm.rangeTime[0];
+				data.endTime  = this.addDialogForm.rangeTime[1];
+				data.enabled = this.addDialogForm.enabled;
+				data.termFlag = this.addDialogForm.termFlag;
+
+				
+				insertBoarding(data,function(resp){
+						if(resp.continue){
+							//关闭弹框
+							$this.addDialogFormVisible = false;
+							//更新表格
+							getBoardingsForPage($this.pageObj,$this.queryFormInfo,function(resp){
+								debugger;
+								$this.tableData = resp.returnValue.rows;
+								$this.pageData.total = resp.returnValue.total;
+								$this.$message({
+					          		message: "新增成功",
+					          		type:"success"
+						        });	
+
+							})	
+
+						}
+				})
+
+			}
 
 
 		}
@@ -582,5 +701,8 @@
 .el-checkbox-group .el-checkbox{
     margin-left:0;
     margin-right:15px;
+}
+.board-general .el-select .el-input__inner{
+ 	max-width:178px; 
 }
 </style>

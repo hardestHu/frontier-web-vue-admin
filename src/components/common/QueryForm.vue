@@ -1,6 +1,6 @@
 <template>
 	<el-row>
-			<el-form :inline="true" label-position="right" label-width="70px"  size="mini" :model="queryFormInfo">
+			<el-form :inline="true" label-position="right" label-width="85px"  size="mini" :model="queryFormInfo">
 				<el-col :xs="24" :sm="12" :md="7" :lg="7" :xl="7" :offset="1" v-for="onePiece in formTemplate.model">
 					<el-form-item :label="onePiece.title">
 					    <el-select v-model="queryFormInfo[onePiece.name]" v-if="onePiece.type == 'select'">	

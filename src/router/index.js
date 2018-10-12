@@ -5,6 +5,7 @@ import Detail from '@/components/Detail'
 import Home from '@/components/detail/Home'
 import RecordPerson from '@/components/detail/RecordPerson'
 import BoardGeneral from '@/components/detail/BoardGeneral'
+import BoardTakeon from '@/components/detail/BoardTakeon'
 
 
 Vue.use(Router)
@@ -15,7 +16,8 @@ const router = [
 		 	// {path:'home',name:'homeLink',component:Home}, 
 		 	{path:'home',name:'homeLink',component:Home}, 
 		 	{path:'record_person',name:"recordPersonLink",component:RecordPerson},
-		 	{path:'board_general',name:"BoardGeneralLink",component:BoardGeneral}
+		 	{path:'board_general',name:"BoardGeneralLink",component:BoardGeneral},
+		 	{path:'board_takeon',name:"BoardTakeonLink",component:BoardTakeon},
 		]
 	},
 	{path:'*',redirect:'/'}	
