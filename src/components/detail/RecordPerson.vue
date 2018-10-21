@@ -70,11 +70,12 @@
 			  		<el-col :span="22" :offset="1">
 			  			<el-form-item label="业务权限">
 			  			 	<el-checkbox-group v-model="dialogForm.businessList">
-							    <el-checkbox label="1">临时搭靠外轮许可证办理</el-checkbox>
-							    <el-checkbox label="2">随船工作证申请</el-checkbox>
+							    <el-checkbox label="1">搭靠外轮许可证办理</el-checkbox>
+							    <!-- <el-checkbox label="2">随船工作证申请</el-checkbox> -->
 							    <el-checkbox label="3">在港船舶移泊申请</el-checkbox>
 							    <el-checkbox label="4">实际抵离港时间确保</el-checkbox>
 							    <el-checkbox label="5">团队旅客出境申报</el-checkbox>
+							    <el-checkbox label="6">出入境查询申请</el-checkbox>
 							    <el-checkbox label="9">取消靠泊计划</el-checkbox>
 							</el-checkbox-group>
 			  			</el-form-item>
@@ -136,6 +137,8 @@
 
 <script>
 	import {getCompanys,getPorts,getUsersForPage,getDictionarys,getQuickReplay,updateUserById,deleteUserById,updateUserAuthorityById} from '@/api'
+	//导入校验项
+	import {ruleForContent} from '@/api/validate'
 	import {Message} from 'element-ui'
 	import BreadTitle from  '../common/BreadTitle'
 	import QueryForm from '../common/QueryForm'
@@ -143,8 +146,6 @@
 		data:function(){
 			let ruleForContent = (rule, value, callback) => {
 				debugger;
-				console.log(rule)
-				console.log(value)
 				if(value.length == 0){
 					return callback(new Error('回复内容不能为空'));
 				}else if(value.length > 300){
@@ -333,7 +334,7 @@
 				this.dialogForm.reply = '';
 				this.dialogForm.status = '1';
 
-				if(currentRowData.authority != null || currentRowData.authority != ''){
+				if(currentRowData.authority != null && currentRowData.authority != ''){
 					let authority = currentRowData.authority.split(',');
 					authority.forEach(function(item,index){
 						if(/^b\d+$/.test(item)){

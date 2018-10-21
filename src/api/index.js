@@ -172,86 +172,292 @@ export function insertBoarding(data,success){
             data:data,
         }).then(success)
 }
-/*一些校验器*/
-/**
- * 身份证号校验
- * @param  {[type]} code [description]
- * @return {[type]}      [description]
- */
-export function  cardIdValid(code) {
-    var city = {
-        11: "北京",
-        12: "天津",
-        13: "河北",
-        14: "山西",
-        15: "内蒙古",
-        21: "辽宁",
-        22: "吉林",
-        23: "黑龙江 ",
-        31: "上海",
-        32: "江苏",
-        33: "浙江",
-        34: "安徽",
-        35: "福建",
-        36: "江西",
-        37: "山东",
-        41: "河南",
-        42: "湖北 ",
-        43: "湖南",
-        44: "广东",
-        45: "广西",
-        46: "海南",
-        50: "重庆",
-        51: "四川",
-        52: "贵州",
-        53: "云南",
-        54: "西藏 ",
-        61: "陕西",
-        62: "甘肃",
-        63: "青海",
-        64: "宁夏",
-        65: "新疆",
-        71: "台湾",
-        81: "香港",
-        82: "澳门",
-        91: "国外 "
-    };
-    var tip = "";
-    var pass = true;
 
-    if (!code || !/(^\d{15}$)|(^\d{18}$)|(^\d{17}(\d|X|x)$)/i.test(code)) {
-        tip = "身份证号格式错误";
-        pass = false;
-    } else if (!city[code.substr(0, 2)]) {
-        tip = "身份证地址编码错误";
-        pass = false;
-    } else {
-        //18位身份证需要验证最后一位校验位
-        if (code.length == 18) {
-            code = code.split('');
-            //∑(ai×Wi)(mod 11)
-            //加权因子
-            var factor = [7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2];
-            //校验位
-            var parity = [1, 0, 'X', 9, 8, 7, 6, 5, 4, 3, 2];
-            var sum = 0;
-            var ai = 0;
-            var wi = 0;
-            for (var i = 0; i < 17; i++) {
-                ai = code[i];
-                wi = factor[i];
-                sum += ai * wi;
-            }
-            var last = parity[sum % 11];
-            if (parity[sum % 11] != code[17]) {
-                tip = "身份证校验位错误";
-                pass = false;
-            }
-        }
-    }
-    return {
-        code: pass,
-        msg: tip
-    };
+// board-takon 相关
+ /**
+ * 根据筛选字段，分页、排序等条件查询搭靠外轮许可证相关数据表
+ * @param data  dock对象，筛选字段
+ * @param pageObj  {page,rows,sort,order}
+ * @param callback
+ */
+export function getDocksForPage(pageObj, data, success) {
+    $ajax({
+    	method: 'post',
+        url: "/dock/getDocksForPage?" + qs.stringify(pageObj),
+        data: data,
+    }).then(success)
 }
 
+ /**
+ * 根据ID修改搭靠外轮许可证信息【审核】
+ * @param data
+ * @param callback
+ */
+export function updateDockById(data, success) {
+    $ajax({
+        method: "post",
+        url: "/dock/updateDockById",
+        data: data,
+    }).then(success)
+}
+
+/** 
+ *新增搭靠证 
+ */
+ export function addTakeon(data, success){
+        $ajax({
+            method:'post',
+            url:"/dock/insertDockLocal",
+            data:data,
+        }).then(success)    
+}
+
+//shift 移泊相关
+/**
+ *
+ * @param  {[type]} pageObj [分页信信息]
+ * @param  {[type]} data    [查询信息]
+ * @param  {[type]} success [回调函数]
+ */
+export function getShiftingsForPage(pageObj,data,success){
+	$ajax({
+            method: "post",
+            url: "/shifting/getShiftingsForPage?" + qs.stringify(pageObj),
+            data: data,
+         }).then(success)
+
+}
+export function updateShiftingById(data,success){
+	$ajax({
+		method:'post',
+		url:"/shifting/updateShiftingById",
+		data:data
+	}).then(success)
+}
+
+export function getUsers(data,success){
+	$ajax({
+		method:'post',
+		url:"/user/getUsers",
+		data:data
+	}).then(success)
+}
+
+export function getShiftingCount(openid,success){
+    $ajax({
+    	method:'get',
+    	url: "/shifting/getShiftingCount?openid=" + openid,
+    }).then(success)
+}            
+              
+//berthing-cancel
+export function getBerthingsForPage(pageObj, data, success) {
+    $ajax({
+        method: "post",
+        url: "/berthing/getBerthingsForPage?" + qs.stringify(pageObj),
+        data: data
+    }).then(success)
+}
+
+ /**
+ * 【受理】根据id审批取消移泊
+ * @param data
+ * @param success
+ */
+export function updateBerthingById(data, success) {
+	$ajax({
+		method:'post',
+		url:"/berthing/updateBerthingById",
+		data: data
+	}).then(success)
+}
+
+//conplain-main
+/**
+ * 根据筛选字段，分页、排序等条件查询举报相关数据
+ * @param pageObj  complaint对象，筛选字段
+ * @param data  {page,rows,sort,order}
+ * @param success
+ */
+export function getComplaintsForPage(pageObj, data, success) {
+    $ajax({
+        method: "post",
+        url: "/complaint/getComplaintsForPage?" + qs.stringify(pageObj),
+        data: data,
+    }).then(success)
+}
+/**
+ * 根据ID修改举报数据【投诉回复】
+ * @param data
+ * @param success
+ */
+export function updateComplaintById(data, success) {
+    $ajax({
+        method: "post",
+        url: "/complaint/updateComplaintById",
+        data: data,
+    }).then(success)
+}
+
+//log-find 
+/**
+ * 
+ * @param  {[type]} pageObj [description]
+ * @param  {[type]} data    [description]
+ * @param  {[type]} success [description]
+ * @return {[type]}         [description]
+ */
+export function getLoggingsForPage (pageObj, data, success) {
+	$ajax({
+	    method: "post",
+	    url: "/logging/getLoggingsForPage?" + qs.stringify(pageObj),
+	    data: data,
+	}).then(success)
+}
+   /*获取用户*/
+
+export function getPartys(success) {
+    $ajax({
+        method: "post",
+        url: "/party/getPartys",
+        data: {},
+    }).then(success)
+}
+
+//user
+/*获取用户列表*/
+export function getPartysForPage(pageObj, data, success) {
+	$ajax({
+		method: "post",
+		url: "/party/getPartysForPage?" + qs.stringify(pageObj),
+		data: data,	
+	}).then(success)
+}
+
+/**
+ * 批量删除用户【禁用】
+ * @param data [id,id,id]
+ * @param success
+ */
+export function deleteParty(data, success) {
+	$ajax({
+		method: "post",
+		url: "/authority/deleteParty",
+		data: data,
+	}).then(success)
+}
+
+/*获取权限列表*/
+export function getRoles(success) {
+	$ajax({
+	    method: "get",
+	    url: "/authority/findAllRoles",
+	}).then(success)
+}
+
+/**
+ *获取上级领导名字
+ */
+export function getLeaderList(data,success){
+	$ajax({
+		method:"post",
+		url:"/authority/getPartys",
+		data:data,
+	}).then(success)
+}
+
+/**
+ * 新增用户
+ * @param data
+ * @param success
+ */
+export function addParty (data, success) {
+	$ajax({
+		method: "post",
+		url:"/authority/addParty",
+		data:data
+	}).then(success)
+}
+
+/**
+ * 根据用户id获取当前用户详细信息
+ * @param userId
+ * @param success
+ */
+export function getPartyById (userId, success) {
+	$ajax({
+		method: "get",
+		url: "/authority/getPartyById?id="+userId,
+	}).then(success)
+}
+
+/**
+ * 根据ID修改用户信息【修改信息、密码】
+ * @param data
+ * @param callback
+ */
+export function updatePartyById(data, success) {
+	$ajax({
+		method: "post",
+		url: "/authority/updatePartyById",
+		data: data,
+	}).then(success)
+}
+
+//重置密码
+export function resetPassword(partyId, success) {
+	$ajax({
+		url: "/party/resetPassword?partyId=" + partyId,
+		method: "post",
+	}).then(success)
+}
+
+//add-reply
+export function getQuickReplysForPage(pageObj,data,success){
+	$ajax({
+		method:'post',
+		url:"/quickReply/getQuickReplysForPage?" + qs.stringify(pageObj),
+		data:data
+	}).then(success)
+}
+export function deleteQuickReplyById(id,success){
+	$ajax({
+		method:"get",
+		url:"/quickReply/deleteQuickReplyById?id="+id
+	}).then(success);
+}
+export function insertQuickReply(data,success){
+	$ajax({
+		method:'post',
+		url:"/quickReply/insertQuickReply",
+		data:data
+	}).then(success)
+}
+
+//port-main
+/**
+ * 根据筛选字段，分页、排序等条件查询登轮证相关数据表
+ * @param pageObj {page,rows,sort,order}
+ * @param data  筛选字段
+ * @param success
+ */
+export function getPortsForPage(pageObj, data, success){
+	$ajax({
+		method:'post',
+		url:"/port/getPortsForPage?"+qs.stringify(pageObj),
+		data:data
+	}).then(success)
+
+}
+ /**
+ * 根据ID修改港口信息
+ * @param data
+ * @param success
+ */
+export function updatePortById(data, success){
+    $ajax({
+        method: "post",
+        url: "/port/updatePortById",
+        data: data,
+    }).then(success)
+}

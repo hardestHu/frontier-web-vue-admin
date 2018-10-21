@@ -27,10 +27,12 @@ a,a:active,a:visited{
     /*下划线和颜色*/
     text-decoration: none;
     color: #ccc;
+
 }
  
 a:hover{
     color:#333;
+    cursor:pointer;
 }
  
 textarea{
@@ -75,4 +77,62 @@ table{
     float:right;
 }
 
+.pageComponent{
+    float: right;
+    padding-top: 10px;
+}
 
+.board-general .el-select .el-input__inner,
+.board-takeon .el-select .el-input__inner,
+.shift .el-select .el-input__inner,
+.berthing-cancel .el-select .el-input__inner,
+.user .el-select .el-input__inner{
+    max-width:178px; 
+}
+
+.board-general .el-table--small td, 
+.board-general .el-table--small th,
+.board-takeon .el-table--small td, 
+.board-takeon .el-table--small th,
+.shift .el-table--small td, 
+.shift .el-table--small th,
+.berthing-cancel .el-table--small td, 
+.berthing-cancel .el-table--small th,
+.complaint-main .el-table--small td, 
+.complaint-main .el-table--small th,
+.log-find .el-table--small td, 
+.log-find .el-table--small th,
+.user .el-table--small td, 
+.user .el-table--small th,
+.add-reply .el-table--small td, 
+.add-reply .el-table--small th,
+.port-main .el-table--small td, 
+.port-main .el-table--small th
+{
+    padding: 5px 0;
+}
+
+.board-general .el-checkbox-group .el-checkbox,
+.board-takeon .el-checkbox-group .el-checkbox,
+.shift .el-checkbox-group .el-checkbox,
+.berthing-cancel .el-checkbox-group .el-checkbox,
+.complaint-main .el-checkbox-group .el-checkbox,
+.log-find .el-checkbox-group .el-checkbox,
+.user .el-checkbox-group .el-checkbox,
+.add-reply .el-checkbox-group .el-checkbox,
+.port-main .el-checkbox-group .el-checkbox
+{
+    margin-left:0;
+    margin-right:15px;
+}
+
+.shift .el-dialog__title{
+    color:#3284E3
+}
+
+.margin-left-20{
+    margin-left: 20px;
+}
+.margin-bottom-20{
+    margin-bottom:20px;
+}

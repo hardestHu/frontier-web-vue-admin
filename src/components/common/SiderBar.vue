@@ -43,7 +43,7 @@
 			 */
 			firstMenuList:function(){
 				debugger;
-				console.log('firtMenuList',this.$store.state.loginStore.menuList);
+				
 			    return this.$store.state.loginStore.menuList.filter(function(item){
 					return item.parentId == '0';
 				})

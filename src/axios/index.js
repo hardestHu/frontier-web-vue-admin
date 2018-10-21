@@ -40,7 +40,7 @@ axios.interceptors.response.use((resp) => {
 
 export default function(option){
     debugger;
-	option.url ="/border" + option.url;
+	option.url ="/border2" + option.url;
     if(option.method.toLowerCase() == "post") {
         if (ajaxHistory.indexOf(option.url) > -1) {
             return;

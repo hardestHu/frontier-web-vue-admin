@@ -50,7 +50,7 @@
 
 		<!-- 审批弹框 -->
 
-		<el-dialog title="临时登轮证详细信息" :visible.sync="dialogFormVisible" width="80%" >
+		<el-dialog title="登轮证详细信息" :visible.sync="dialogFormVisible" width="80%" >
 			<el-form :model="dialogForm"  :inline="true" size="mini" label-position="right" label-suffix=" :" ref="dialogForm">
 			  	<el-row>
 			  		<el-col :span="7" :offset='1'>
@@ -187,7 +187,7 @@
 			</el-form>
 			<div slot="footer">
 				<el-button type="primary" @click="dialogFormVisible = false" v-if="dialogForm.currentStatus == '0'">取 消</el-button>
-				<el-button type="primary" @click="updateDialog('dialogForm')" v-if="dialogForm.currentStatus == '0'">保 存</el-button>
+				<el-button type="primary" @click="saveDialog('dialogForm')" v-if="dialogForm.currentStatus == '0'">保 存</el-button>
 				<el-button type="primary" @click="dialogFormVisible = false" v-else>关 闭</el-button>
 			</div>
 		</el-dialog>
@@ -276,7 +276,7 @@
 					</el-col>
 
 					<el-col :span='11' :offset='1'>
-						<el-form-item label="期限">
+						<el-form-item label="类型">
 							<el-select v-model="addDialogForm.termFlag">
 								<el-option label="短期登轮证" value="0"></el-option>
 								<el-option label="长期登轮证" value="1"></el-option>
@@ -306,40 +306,11 @@
 <script>
 	import BreadTitle from '../common/BreadTitle'
 	import QueryForm from '../common/QueryForm'
-	import {getDictionarys,getBoardingsForPage,getQuickReplay,updateBoardingById,cardIdValid,startendValid,insertBoarding} from '@/api'
+	import {getDictionarys,getBoardingsForPage,getQuickReplay,updateBoardingById,startendValid,insertBoarding} from '@/api'
+	//导入校验方法
+	import {ruleForContent,ruleForQrcode,validateId} from '@/api/validate'
 	export default {
 		data:function(){
-			let ruleForContent = (rule, value, callback) => {
-				debugger;
-				if(value.length == 0){
-					return callback(new Error('回复内容不能为空'));
-				}else if(value.length > 300){
-					return callback(new Error('回复内容过长，请重新输入'));
-				}else {
-					return callback();
-				}
-			}	
-			let ruleForQrcode = (rule, value, callback) => {
-				debugger;
-				if(value.length == 0){
-					return callback(new Error('请输入二维码!'));
-				}else{
-					return callback();
-				}
-			}
-			let validateId = (rule, value, callback) => {
-				debugger;
-				if(value.length == 0){
-					return callback(new Error('请输入身份证号'));
-				}else{
-					let message = cardIdValid(value);
-					if(!message.code){
-						return callback(new Error(message.msg));
-					}else{
-						return callback();
-					}
-				}
-			}
 			return {
 				title:"上下外国船舶许可",
 				formTemplate:{
@@ -550,6 +521,7 @@
 				getBoardingsForPage(orderObj,this.queryFormInfo,function(resp) {
                     debugger;
 				    $this.tableData = resp.returnValue.rows;
+				    $this.pageData.total = resp.returnValue.total;
                 })
 			},
 			dblClick:function(currentRowData){
@@ -590,7 +562,7 @@
 				debugger;
 				this.dialogForm.reply = item;
 			},
-			updateDialog:function(formName){
+			saveDialog:function(formName){
 				debugger;
 				let $this = this;
 				let valiResult = true;
@@ -648,6 +620,7 @@
 			},
 			confirmAddBoard:function(){
 				debugger;
+				
 				let $this = this;
 				let data = {}
 				data.name = this.addDialogForm.name;
@@ -690,19 +663,3 @@
 
 	}
 </script>
-<style>
-.pageComponent{
-    float: right;
-    padding-top: 10px;
-}
-.el-table--small td, .el-table--small th {
-    padding: 5px 0;
-}
-.el-checkbox-group .el-checkbox{
-    margin-left:0;
-    margin-right:15px;
-}
-.board-general .el-select .el-input__inner{
- 	max-width:178px; 
-}
-</style>
