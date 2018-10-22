@@ -1,6 +1,6 @@
 <template>
 	<div style="width:230px">
-		<el-menu background-color="#222d32" text-color="#b8c7ce" active-text-color="#fff" default-active='home' :unique-opened="true" :router="true" :collapse="isCollapse">
+		<el-menu background-color="#222d32" text-color="#b8c7ce" active-text-color="#fff" default-active='home' :unique-opened="true" :router="true" :collapse="isCollapse" @select="selectMenu($event)">
 			 <el-menu-item  index="home">
 			 	<i class="el-icon-location"></i>
 			 	<span slot="title" class="menuText">首页</span>
@@ -61,7 +61,12 @@
 			}
 		},
 		methods:{
-
+			selectMenu:function(menuRouter){
+				debugger;
+				console.log('menu',menuRouter);
+				this.$store.commit('storeBrowseMenu',menuRouter);
+				this.$store.commit('storeCurrentView',menuRouter);
+			}
 		}
 	}
 </script>

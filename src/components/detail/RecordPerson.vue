@@ -262,21 +262,51 @@
 		},
 		components:{BreadTitle,QueryForm},
 		mounted:function(){
+			debugger;
 			let $this = this;
+			
 			//公司名字下拉列表
 			this.formTemplate.model[1].data = this.$store.state.companyList;
 			//港口名称下拉列表
 			this.formTemplate.model[2].data = this.$store.state.portList;
 			
-			//初始化表格数据
-			this.queryFormInfo.portId = this.$store.state.portId;
-			getUsersForPage(this.pageObj,this.queryFormInfo,function(resp){
-				debugger;
-				if(resp.returnValue && resp.returnValue.total > 0){
-					$this.tableData = resp.returnValue.rows;
-					$this.pageData.total = resp.returnValue.total;
-				}
-			})
+			
+
+
+
+			if(this.$store.state.recordPerson.loaded){
+				this.queryFormInfo.status = this.$store.state.recordPerson.queryFormInfo.status;
+				this.queryFormInfo.companyName = this.$store.state.recordPerson.queryFormInfo.companyName;
+				this.queryFormInfo.portId = this.$store.state.recordPerson.queryFormInfo.portId;
+				this.queryFormInfo.identityCard =this.$store.state.recordPerson.queryFormInfo.identityCard;
+				this.formTemplate.model[0].value = this.$store.state.recordPerson.queryFormInfo.status;
+				this.formTemplate.model[1].value = this.$store.state.recordPerson.queryFormInfo.companyName;
+				this.formTemplate.model[2].value = this.$store.state.recordPerson.queryFormInfo.portId;
+				this.formTemplate.model[3].value = this.$store.state.recordPerson.queryFormInfo.identityCard;
+
+				this.pageObj.page = this.$store.state.recordPerson.pageObj.currentPageNum;
+				
+				getUsersForPage(this.pageObj,this.queryFormInfo,function(resp){
+					debugger;
+					if(resp.returnValue && resp.returnValue.total > 0){
+						$this.tableData = resp.returnValue.rows;
+						$this.pageData.total = resp.returnValue.total;
+						$this.$set($this.pageData,'currentPage',Number($this.pageObj.page));
+					}
+				})
+			}else{
+				//初始化表格数据
+				this.queryFormInfo.portId = this.$store.state.portId;
+				getUsersForPage(this.pageObj,this.queryFormInfo,function(resp){
+					debugger;
+					if(resp.returnValue && resp.returnValue.total > 0){
+						$this.tableData = resp.returnValue.rows;
+						$this.pageData.total = resp.returnValue.total;
+					}
+				})
+				
+			}
+			
 			//审批回复用语
 			getQuickReplay({module: "备案"},function(resp){
 				debugger;
@@ -304,7 +334,10 @@
 					$this.tableData = resp.returnValue.rows;
 					$this.pageData.total = resp.returnValue.total;
 					$this.$set($this.pageData,'currentPage',1);
+
 				})
+				//存查询条件
+				this.$store.commit('storeRecordPersonQueryFormInfo',data);
 			},
 			
 			selectCurrentPage:function(currentPageNum){
@@ -316,6 +349,8 @@
 					debugger;
 					$this.tableData = resp.returnValue.rows;
 				})
+				//存当前页数
+				this.$store.commit('storeRecordPersonPageObj',currentPageNum);
 
 			},
 			dblClick:function(currentRowData){

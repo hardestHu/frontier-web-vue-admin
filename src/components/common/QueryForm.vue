@@ -75,6 +75,16 @@
 			add:function(){
 				this.$emit('addData',this.queryFormInfo)
 			}
+		},
+		watch:{
+			formTemplate:function(newValue,oldValue){
+				debugger;
+				console.log('watch formtEmplate')
+				let $this = this;
+				newValue.model.forEach(function(item,index){
+					$this.$set($this.queryFormInfo,item.name,item.value);
+				})		
+			}
 		}
 	}
 </script>

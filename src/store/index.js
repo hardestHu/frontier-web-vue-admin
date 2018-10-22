@@ -3,12 +3,15 @@ import Vuex from 'vuex'
 import {getCompanys,getPorts} from '@/api'
 Vue.use(Vuex)
 import loginStore from './modules/loginStore'
+import recordPerson from './modules/recordPerson'
 export default  new Vuex.Store({
 	state:{
 		roleLevel:'',
 		portId:'',
+		browseMenuList:['home'],
 		companyList:[],
-		portList:[]
+		portList:[],
+		currentView:"home",
 	},
 	mutations:{
 		storeRoleLevel:function(state,data){
@@ -17,12 +20,29 @@ export default  new Vuex.Store({
 		storePortId:function(state,data){
 			state.roleLevel = data;
 		},
+		
+		storeBrowseMenu:function(state,data){
+			debugger;
+			if(state.browseMenuList.indexOf(data) < 0){
+				state.browseMenuList.push(data);
+			}else{
+				return;
+			}
+			
+		},
+		deleteBrowseMenu:function(state,index){
+			debugger;
+			state.browseMenuList.splice(index,1);
+		},
 		storeCompany:function(state,data){
 			state.companyList = data;
 		},
 		storePort:function(state,data){
 			state.portList = data;
 		},
+		storeCurrentView:function(state,data){
+			state.currentView = data;
+		}
 
 	},
 	actions:{
@@ -53,5 +73,6 @@ export default  new Vuex.Store({
 	},
 	modules:{
 		loginStore:loginStore,
+		recordPerson:recordPerson,
 	}
 })

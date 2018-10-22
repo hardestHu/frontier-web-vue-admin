@@ -461,3 +461,15 @@ export function updatePortById(data, success){
         data: data,
     }).then(success)
 }
+
+//home
+/**
+ * 查询统计数据
+ * @param callback
+ */
+export function getStatistics(success){
+    $ajax({
+        method: "get",
+        url: "/authority/getStatistics",
+    }).then(success)
+}
